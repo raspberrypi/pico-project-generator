@@ -1,0 +1,71 @@
+name	location	description	type	advanced	default	depends	group	max	min
+PARAM_ASSERTIONS_DISABLE_ALL	src/common/pico_base/include/pico/assert.h:22	Global assert disable	bool		0		pico_base		
+PARAM_ASSERTIONS_ENABLED_ADC	src/rp2_common/hardware_adc/include/hardware/adc.h:47	Enable/disable assertions in the ADC module	bool		0		hardware_adc		
+PARAM_ASSERTIONS_ENABLED_CLOCKS	src/rp2_common/hardware_clocks/include/hardware/clocks.h:92	Enable/disable assertions in the clocks module	bool		0		hardware_clocks		
+PARAM_ASSERTIONS_ENABLED_DMA	src/rp2040/hardware_structs/include/hardware/structs/dma.h:16	Enable/disable DMA assertions	bool		0		hardware_dma		
+PARAM_ASSERTIONS_ENABLED_FLASH	src/rp2_common/hardware_flash/include/hardware/flash.h:12	Enable/disable assertions in the flash module	bool		0		hardware_flash		
+PARAM_ASSERTIONS_ENABLED_GPIO	src/rp2_common/hardware_gpio/include/hardware/gpio.h:18	Enable/disable assertions in the GPIO module	bool		0		hardware_gpio		
+PARAM_ASSERTIONS_ENABLED_I2C	src/rp2_common/hardware_i2c/include/hardware/i2c.h:14	Enable/disable assertions in the I2C module	bool		0		hardware_i2c		
+PARAM_ASSERTIONS_ENABLED_INTERP	src/rp2_common/hardware_interp/include/hardware/interp.h:14	Enable/disable assertions in the interpolation module	bool		0		hardware_interp		
+PARAM_ASSERTIONS_ENABLED_IRQ	src/rp2_common/hardware_irq/include/hardware/irq.h:105	Enable/disable assertions in the IRQ module	bool		0		hardware_irq		
+PARAM_ASSERTIONS_ENABLED_PHEAP	src/common/pico_util/include/pico/util/pheap.h:16	Enable/disable assertions in the pheap module	bool		0		pico_util		
+PARAM_ASSERTIONS_ENABLED_PIO	src/rp2_common/hardware_pio/include/hardware/pio.h:17	Enable/disable assertions in the PIO module	bool		0		hardware_pio		
+PARAM_ASSERTIONS_ENABLED_PIO_INSTRUCTIONS	src/rp2_common/hardware_pio/include/hardware/pio_instructions.h:12	Enable/disable assertions in the PIO instructions	bool		0		hardware_pio		
+PARAM_ASSERTIONS_ENABLED_PWM	src/rp2_common/hardware_pwm/include/hardware/pwm.h:17	Enable/disable assertions in the PWM module	bool		0		hadrware_pwm		
+PARAM_ASSERTIONS_ENABLED_SPI	src/rp2_common/hardware_spi/include/hardware/spi.h:14	Enable/disable assertions in the SPI module	bool		0		hardware_spi		
+PARAM_ASSERTIONS_ENABLED_SYNC	src/rp2_common/hardware_sync/include/hardware/sync.h:83	Enable/disable assertions in the HW sync module	bool		0		hardware_sync		
+PARAM_ASSERTIONS_ENABLED_TIME	src/common/pico_time/include/pico/time.h:32	Enable/disable assertions in the time module	bool		0		pico_time		
+PARAM_ASSERTIONS_ENABLED_TIMER	src/rp2_common/hardware_timer/include/hardware/timer.h:48	Enable/disable assertions in the timer module	bool		0		hardware_timer		
+PARAM_ASSERTIONS_ENABLED_UART	src/rp2_common/hardware_uart/include/hardware/uart.h:13	Enable/disable assertions in the UART module	bool		0		hardware_uart		
+PARAM_ASSERTIONS_ENABLE_ALL	src/common/pico_base/include/pico/assert.h:21	Global assert enable	bool		0		pico_base		
+PICO_CORE1_STACK_SIZE	src/rp2_common/pico_multicore/include/pico/multicore.h:26	Stack size for core 1			PICO_STACK_SIZE/0x800		pico_multicore	0x10000	0x100
+PICO_DEBUG_MALLOC	src/rp2_common/pico_malloc/include/pico/malloc.h:28	Enable/disable debug printf from malloc	bool		0		pico_malloc		
+PICO_DEBUG_MALLOC_LOW_WATER	src/rp2_common/pico_malloc/include/pico/malloc.h:33	Define the lower bound for allocation addresses to be printed by PICO_DEBUG_MALLOC			0		pico_malloc		0
+PICO_DEBUG_PIN_BASE	src/rp2_common/hardware_gpio/include/hardware/gpio.h:502	First pin to use for debug output (if enabled)			19		hardware_gpio	28	0
+PICO_DEBUG_PIN_COUNT	src/rp2_common/hardware_gpio/include/hardware/gpio.h:507	Number of pins to use for debug output (if enabled)			3		hardware_gpio	28	1
+PICO_DEFAULT_IRQ_PRIORITY	src/rp2_common/hardware_irq/include/hardware/irq.h:92	Define the default IRQ priority			0x80		hardware_irq		
+PICO_DEFAULT_UART	src/rp2_common/hardware_uart/include/hardware/uart.h:32	Define the default UART used for printf etc			0		hardware_uart		
+PICO_DEFAULT_UART_BAUD_RATE	src/rp2_common/hardware_uart/include/hardware/uart.h:37	Define the default UART baudrate			115200		hardware_uart	921600	
+PICO_DEFAULT_UART_RX_PIN	src/rp2_common/hardware_uart/include/hardware/uart.h:47	Define the default UART RX pin			1		hardware_uart	29	0
+PICO_DEFAULT_UART_TX_PIN	src/rp2_common/hardware_uart/include/hardware/uart.h:42	Define the default UART TX pin			0		hardware_uart	29	0
+PICO_DISABLE_SHARED_IRQ_HANDLERS	src/rp2_common/hardware_irq/include/hardware/irq.h:16	Disable shared IRQ handers	bool		0		hardware_irq		
+PICO_HEAP_SIZE	src/rp2040/hardware_regs/include/hardware/platform_defs.h:33	Heap size to reserve		true	0x800		pico_standard_link		0x100
+PICO_MALLOC_PANIC	src/rp2_common/pico_malloc/include/pico/malloc.h:23	Enable/disable panic when an allocation failure occurs	bool		1		pico_malloc		
+PICO_MAX_SHARED_IRQ_HANDLERS	src/rp2_common/hardware_irq/include/hardware/irq.h:11	Maximum Number of shared IRQ handers		true	4		hardware_irq		
+PICO_NO_RAM_VECTOR_TABLE	src/rp2040/hardware_regs/include/hardware/platform_defs.h:38	Enable/disable the RAM vector table	bool	true	0		pico_runtime		
+PICO_PHEAP_MAX_ENTRIES	src/common/pico_util/include/pico/util/pheap.h:38	Maximum number of entries in the pheap			255		pico_util	65534	1
+PICO_PRINTF_ALWAYS_INCLUDED	src/rp2_common/pico_printf/include/pico/printf.h:49	Whether to always printf code even if only called weakly (by panic)	bool		1 in debug build, 0 otherwise		pico_printf		
+PICO_PRINTF_DEFAULT_FLOAT_PRECISION	src/rp2_common/pico_printf/printf.c:66	Define default floating point precision			6		pico_printf	16	1
+PICO_PRINTF_DISABLE_SUPPORT_PTRDIFF_T	src/rp2_common/pico_printf/printf.c:81	Enable support for the ptrdiff_t type (%t)			1		pico_printf		
+PICO_PRINTF_FTOA_BUFFER_SIZE	src/rp2_common/pico_printf/printf.c:47	Define printf ntof buffer size			32		pico_printf	128	0
+PICO_PRINTF_MAX_FLOAT	src/rp2_common/pico_printf/printf.c:71	Define the largest float suitable to print with %f			1e9		pico_printf	1e9	1
+PICO_PRINTF_NTOA_BUFFER_SIZE	src/rp2_common/pico_printf/printf.c:40	Define printf ntoa buffer size			32		pico_printf	128	0
+PICO_PRINTF_SUPPORT_EXPONENTIAL	src/rp2_common/pico_printf/printf.c:60	Enable exponential floating point printing			1		pico_printf		
+PICO_PRINTF_SUPPORT_FLOAT	src/rp2_common/pico_printf/printf.c:54	Enable floating point printing			1		pico_printf		
+PICO_PRINTF_SUPPORT_LONG_LONG	src/rp2_common/pico_printf/printf.c:76	Enable support for long long types (%llu or %p)			1		pico_printf		
+PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY	src/rp2_common/hardware_irq/include/hardware/irq.h:100	Set default shared IRQ order priority			0x80		hardware_irq		
+PICO_SPINLOCK_ID_CLAIM_FREE_END	src/rp2_common/hardware_sync/include/hardware/sync.h:78	Spinlock ID for claim free end			31		hardware_sync	31	16
+PICO_SPINLOCK_ID_CLAIM_FREE_FIRST	src/rp2_common/hardware_sync/include/hardware/sync.h:73	Spinlock ID for claim free first			24		hardware_sync	31	16
+PICO_SPINLOCK_ID_HARDWARE_CLAIM	src/rp2_common/hardware_sync/include/hardware/sync.h:58	Spinlock ID for Hardware claim protection			11		hardware_sync	31	0
+PICO_SPINLOCK_ID_IRQ	src/rp2_common/hardware_sync/include/hardware/sync.h:48	Spinlock ID for IRQ protection			9		hardware_sync	31	0
+PICO_SPINLOCK_ID_STRIPED_FIRST	src/rp2_common/hardware_sync/include/hardware/sync.h:63	Spinlock ID for striped first			16		hardware_sync	31	16
+PICO_SPINLOCK_ID_STRIPED_LAST	src/rp2_common/hardware_sync/include/hardware/sync.h:68	Spinlock ID for striped last			23		hardware_sync	31	16
+PICO_SPINLOCK_ID_TIMER	src/rp2_common/hardware_sync/include/hardware/sync.h:53	Spinlock ID for Timer protection			10		hardware_sync	31	0
+PICO_STACK_SIZE	src/rp2040/hardware_regs/include/hardware/platform_defs.h:28	Stack Size		true	0x800		pico_standard_link		0x100
+PICO_STDIO_DEFAULT_CRLF	src/rp2_common/pico_stdio/include/pico/stdio.h:29	Default for CR/LF conversion enabled on all stdio outputs	bool		1	PICO_STDIO_ENABLE_CRLF_SUPPORT	pico_stdio		
+PICO_STDIO_SEMIHOSTING_DEFAULT_CRLF	src/rp2_common/pico_stdio_semihosting/include/pico/stdio_semihosting.h:20	Default state of CR/LF translation for semihosting output	bool		PICO_STDIO_DEFAULT_CRLF		pico_stdio_semihosting		
+PICO_STDIO_STACK_BUFFER_SIZE	src/rp2_common/pico_stdio/include/pico/stdio.h:34	Define printf buffer size (on stack)... this is just a working buffer not a max output size			128		pico_stdio	512	0
+PICO_STDIO_UART_DEFAULT_CRLF	src/rp2_common/pico_stdio_uart/include/pico/stdio_uart.h:21	Default state of CR/LF translation for UART output	bool		PICO_STDIO_DEFAULT_CRLF		pico_stdio_uart		
+PICO_STDIO_USB_DEFAULT_CRLF	src/rp2_common/pico_stdio_usb/include/pico/stdio_usb.h:24	Default state of CR/LF translation for USB output	bool		PICO_STDIO_DEFAULT_CRLF		pico_stdio_usb		
+PICO_STDIO_USB_LOW_PRIORITY_IRQ	src/rp2_common/pico_stdio_usb/include/pico/stdio_usb.h:40	low priority (non hardware) IRQ number to claim for tud_task() background execution		true	31		pico_stdio_usb		
+PICO_STDIO_USB_STDOUT_TIMEOUT_US	src/rp2_common/pico_stdio_usb/include/pico/stdio_usb.h:29	Number of microseconds to be blocked trying to write USB output before assuming the host has disappeared and discarding data			500000		pico_stdio_usb		
+PICO_STDIO_USB_TASK_INTERVAL_US	src/rp2_common/pico_stdio_usb/include/pico/stdio_usb.h:35	Period of microseconds between calling tud_task in the background		true	1000		pico_stdio_usb		
+PICO_STDOUT_MUTEX	src/rp2_common/pico_stdio/include/pico/stdio.h:19	Enable/disable mutex around stdout	bool		1		pico_stdio		
+PICO_TIME_DEFAULT_ALARM_POOL_DISABLED	src/common/pico_time/include/pico/time.h:273	Disable the default alarm pool	bool	true	0		pico_time		
+PICO_TIME_DEFAULT_ALARM_POOL_HARDWARE_ALARM_NUM	src/common/pico_time/include/pico/time.h:290	Select which HW alarm is used for the default alarm pool		true	3		pico_time	3	0
+PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS	src/common/pico_time/include/pico/time.h:300	Selects the maximum number of concurrent timers in the default alarm pool		true	16		pico_time	255	0
+PICO_UART_DEFAULT_CRLF	src/rp2_common/hardware_uart/include/hardware/uart.h:27	Enable/disable CR/LF translation on UART	bool		0	PICO_UART_ENABLE_CRLF_SUPPORT	hardware_uart		
+PICO_UART_ENABLE_CRLF_SUPPORT	src/rp2_common/hardware_uart/include/hardware/uart.h:22	Enable/disable CR/LF translation support	bool		1		hardware_uart		
+PICO_USE_MALLOC_MUTEX	src/rp2_common/pico_malloc/include/pico/malloc.h:18	Whether to protect malloc etc witha mutex	bool		1 with pico_multicore, 0 otherwise		pico_malloc		
+STDIO_ENABLE_CRLF_SUPPORT	src/rp2_common/pico_stdio/include/pico/stdio.h:24	Enable/disable CR/LF output conversion support	bool		1		pico_stdio		
+USB_DPRAM_MAX	src/rp2040/hardware_structs/include/hardware/structs/usb.h:47	Set amount of USB RAM used by USB system			4096		hardware_usb	4096	0
