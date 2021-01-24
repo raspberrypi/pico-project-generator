@@ -588,7 +588,7 @@ class ProjectWindow(tk.Frame):
         mainFrame = tk.Frame(self, bg=GetBackground()).grid(row=0, column=0, columnspan=6, rowspan=12)
 
         # Need to keep a reference to the image or it will not appear.
-        self.logo = tk.PhotoImage(file="logo_alpha.gif")
+        self.logo = tk.PhotoImage(file=self._get_filepath("logo_alpha.gif"))
         logowidget = ttk.Label(mainFrame, image=self.logo, borderwidth=0, relief="solid").grid(row=0,column=0, columnspan=5, pady=10)
 
         namelbl = ttk.Label(mainFrame, text='Project Name :').grid(row=2, column=0, sticky=tk.E)
@@ -726,6 +726,9 @@ class ProjectWindow(tk.Frame):
     def config(self):
         # Run the configuration window
         self.configs = ConfigurationWindow(self, self.configs).get()
+
+    def _get_filepath(self, filename):
+        return os.path.join(os.path.dirname(__file__), filename)
 
 def CheckPrerequisites():
     global isMac, isWindows
