@@ -603,6 +603,7 @@ class ProjectWindow(tk.Frame):
 
         locationlbl = ttk.Label(mainFrame, text='Location :').grid(row=3, column=0, sticky=tk.E)
         self.locationName = tk.StringVar()
+        self.locationName.set(os.getcwd())
         locationEntry = ttk.Entry(mainFrame, textvariable=self.locationName).grid(row=3, column=1, columnspan=3, sticky=tk.W+tk.E, padx=5)
         locationBrowse = ttk.Button(mainFrame, text='Browse', command=self.browse).grid(row=3, column=4)
 
