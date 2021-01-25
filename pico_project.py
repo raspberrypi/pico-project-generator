@@ -865,6 +865,7 @@ def GenerateCMake(folder, params):
     # seemingly a bit easier to handle than the backslashes
 
     p = str(params.sdkPath).replace('\\','/')
+    p = '\"' + p + '\"'
 
     file.write('set(PICO_SDK_PATH ' + p + ')\n\n')
     file.write(cmake_header2)
