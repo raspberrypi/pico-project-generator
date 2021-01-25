@@ -908,7 +908,7 @@ def GenerateCMake(folder, params):
 
     # Selected libraries/features
     if (params.features):
-        file.write('# Add any user reuqested libraries\n')
+        file.write('# Add any user requested libraries\n')
         file.write('target_link_libraries(' + params.projectName + '\n')
         for feat in params.features:
             if (feat in features_list):
@@ -972,7 +972,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects):
                   '}\n')
 
             s1 = ( '{\n'
-                   '  "cmake.configureOnOpen": false\n'
+                   '  "cmake.configureOnOpen": false,\n'
                    '  "cmake.statusbar.advanced": {\n'
                    '    "debug" : {\n'
                    '      "visibility": "hidden"\n'
