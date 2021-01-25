@@ -21,7 +21,6 @@ import tkinter as tk
 from tkinter import messagebox as mb
 from tkinter import filedialog as fd
 from tkinter import simpledialog as sd
-
 from tkinter import ttk
 
 CMAKELIST_FILENAME='CMakeLists.txt'
@@ -744,13 +743,13 @@ def CheckSDKPath(gui):
     sdkPath = os.getenv('PICO_SDK_PATH')
 
     if sdkPath == None:
-        m = 'Unabled to locate the Pico SDK, PICO_SDK_PATH is not set'
+        m = 'Unabled to locate the Raspberry Pi Pico SDK, PICO_SDK_PATH is not set'
         if (gui):
             RunWarning(m)
         else:
             print(m)
     elif not os.path.isdir(sdkPath):
-        m = 'Unabled to locate the Pico SDK, PICO_SDK_PATH does not point to a directory'
+        m = 'Unabled to locate the Raspberry Pi Pico SDK, PICO_SDK_PATH does not point to a directory'
         if (gui):
             RunWarning(m)
         else:
@@ -1121,6 +1120,7 @@ def DoEverything(parent, params):
 # main execution starteth here
 
 args = ParseCommandLine()
+
 
 # Check we have everything we need to compile etc
 c = CheckPrerequisites()
