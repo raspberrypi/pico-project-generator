@@ -607,7 +607,7 @@ class ProjectWindow(tk.Frame):
         locationBrowse = ttk.Button(mainFrame, text='Browse', command=self.browse).grid(row=3, column=4)
 
         # Features section
-        featuresframe = ttk.LabelFrame(mainFrame, text="Features", relief=tk.RIDGE, borderwidth=2)
+        featuresframe = ttk.LabelFrame(mainFrame, text="Library Options", relief=tk.RIDGE, borderwidth=2)
         featuresframe.grid(row=4, column=0, columnspan=5, rowspan=5, ipadx=5, padx=5, sticky=tk.E+tk.W)
 
         # Add features to the list
