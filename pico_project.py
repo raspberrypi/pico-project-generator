@@ -891,7 +891,7 @@ def GenerateCMake(folder, params):
 
     if params.wantRunFromRAM:
         file.write('# no_flash means the target is to run from RAM\n')
-        file.write('pico_set_binary_type(' + projectName + ' no_flash)\n\n')
+        file.write('pico_set_binary_type(' + params.projectName + ' no_flash)\n\n')
 
     # Console output destinations
     if params.wantUART:
