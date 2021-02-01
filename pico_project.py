@@ -607,7 +607,7 @@ class ProjectWindow(tk.Frame):
         locationBrowse = ttk.Button(mainFrame, text='Browse', command=self.browse).grid(row=3, column=4)
 
         # Features section
-        featuresframe = ttk.LabelFrame(mainFrame, text="Features", relief=tk.RIDGE, borderwidth=2)
+        featuresframe = ttk.LabelFrame(mainFrame, text="Library Options", relief=tk.RIDGE, borderwidth=2)
         featuresframe.grid(row=4, column=0, columnspan=5, rowspan=5, ipadx=5, padx=5, sticky=tk.E+tk.W)
 
         # Add features to the list
@@ -891,7 +891,7 @@ def GenerateCMake(folder, params):
 
     if params.wantRunFromRAM:
         file.write('# no_flash means the target is to run from RAM\n')
-        file.write('pico_set_binary_type(' + projectName + ' no_flash)\n\n')
+        file.write('pico_set_binary_type(' + params.projectName + ' no_flash)\n\n')
 
     # Console output destinations
     if params.wantUART:
