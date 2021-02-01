@@ -706,7 +706,7 @@ class ProjectWindow(tk.Frame):
         projectPath = self.locationName.get()
         features = self.GetFeatures()
         projects = list()
-        if (self.wantVSCode):
+        if (self.wantVSCode.get()):
             projects.append("vscode")
 
         p = Parameters(sdkPath=self.sdkpath, projectRoot=Path(projectPath), projectName=self.projectName.get(),
