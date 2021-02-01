@@ -709,10 +709,10 @@ class ProjectWindow(tk.Frame):
         if (self.wantVSCode):
             projects.append("vscode")
 
-        p = Parameters(self.sdkpath, Path(projectPath), self.projectName.get(), True, self.wantOverwrite.get(), self.wantBuild.get(),\
-                       features, projects, self.configs, self.wantRunFromRAM.get(), \
-                       self.wantExamples.get(),\
-                       self.wantUART.get(), self.wantUSB.get())
+        p = Parameters(sdkPath=self.sdkpath, projectRoot=Path(projectPath), projectName=self.projectName.get(),
+                       gui=True, overwrite=self.wantOverwrite.get(), build=self.wantBuild.get(),
+                       features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
+                       examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get())
 
         DoEverything(self, p)
 
@@ -1172,7 +1172,10 @@ if args.list or args.configs:
 
     sys.exit(0)
 else :
-    p = Parameters(sdkPath, projectRoot, args.name, False, args.overwrite, args.build, args.feature, args.project, (), args.runFromRAM, args.examples, args.uart, args.usb)
+    p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
+                   gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
+                   projects=args.project, configs=(), runFromRAM=args.runFromRAM,
+                   examples=args.examples, uart=args.uart, usb=args.usb)
 
     DoEverything(None, p)
 
