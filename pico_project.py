@@ -840,7 +840,7 @@ def GenerateMain(folder, projectName, features):
 def GenerateCMake(folder, params):
 
     cmake_header1 = ("# Generated Cmake Pico project file\n\n"
-                 "cmake_minimum_required(VERSION 3.12)\n\n"
+                 "cmake_minimum_required(VERSION 3.13)\n\n"
                  "set(CMAKE_C_STANDARD 11)\n"
                  "set(CMAKE_CXX_STANDARD 17)\n\n"
                  "# initalize pico_sdk from installed location\n"
