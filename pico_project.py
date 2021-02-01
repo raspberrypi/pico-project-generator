@@ -878,7 +878,7 @@ def GenerateCMake(folder, params):
     # add the preprocessor defines for overall configuration
     if params.configs:
         file.write('# Add any PICO_CONFIG entries specified in the Advanced settings\n')
-        for c, v in configs.items():
+        for c, v in params.configs.items():
             file.write('add_compile_definitions(-D' + c + '=' + v + ')\n')
         file.write('\n')
 
