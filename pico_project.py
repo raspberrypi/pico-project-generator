@@ -135,7 +135,10 @@ if args.list or args.configs:
 
     sys.exit(0)
 else :
-    p = Parameters(sdkPath, projectRoot, args.name, False, args.overwrite, args.build, args.feature, args.project, (), args.runFromRAM, args.examples, args.uart, args.usb)
+    p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
+                   gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
+                   projects=args.project, configs=(), runFromRAM=args.runFromRAM,
+                   examples=args.examples, uart=args.uart, usb=args.usb)
     from pico_project_generation import DoEverything
     DoEverything(None, p)
 

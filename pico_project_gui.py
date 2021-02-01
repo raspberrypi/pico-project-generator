@@ -392,7 +392,7 @@ class ProjectWindow(tk.Frame):
         locationBrowse = ttk.Button(mainFrame, text='Browse', command=self.browse).grid(row=3, column=4)
 
         # Features section
-        featuresframe = ttk.LabelFrame(mainFrame, text="Features", relief=tk.RIDGE, borderwidth=2)
+        featuresframe = ttk.LabelFrame(mainFrame, text="Library Options", relief=tk.RIDGE, borderwidth=2)
         featuresframe.grid(row=4, column=0, columnspan=5, rowspan=5, ipadx=5, padx=5, sticky=tk.E+tk.W)
 
         # Add features to the list
@@ -491,13 +491,13 @@ class ProjectWindow(tk.Frame):
         projectPath = self.locationName.get()
         features = self.GetFeatures()
         projects = list()
-        if (self.wantVSCode):
+        if (self.wantVSCode.get()):
             projects.append("vscode")
 
-        p = Parameters(self.sdkpath, Path(projectPath), self.projectName.get(), True, self.wantOverwrite.get(), self.wantBuild.get(),\
-                       features, projects, self.configs, self.wantRunFromRAM.get(), \
-                       self.wantExamples.get(),\
-                       self.wantUSB.get(), self.wantUART.get())
+        p = Parameters(sdkPath=self.sdkpath, projectRoot=Path(projectPath), projectName=self.projectName.get(),
+                       gui=True, overwrite=self.wantOverwrite.get(), build=self.wantBuild.get(),
+                       features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
+                       examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get())
 
         from pico_project_generation import DoEverything
         DoEverything(self, p)
