@@ -712,7 +712,7 @@ class ProjectWindow(tk.Frame):
         p = Parameters(self.sdkpath, Path(projectPath), self.projectName.get(), True, self.wantOverwrite.get(), self.wantBuild.get(),\
                        features, projects, self.configs, self.wantRunFromRAM.get(), \
                        self.wantExamples.get(),\
-                       self.wantUSB.get(), self.wantUART.get())
+                       self.wantUART.get(), self.wantUSB.get())
 
         DoEverything(self, p)
 
