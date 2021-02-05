@@ -872,7 +872,7 @@ def GenerateCMake(folder, params):
 
     file.write('set(PICO_SDK_PATH ' + p + ')\n\n')
     file.write(cmake_header2)
-    file.write('project(' + params.projectName + ' C CXX)\n\n')
+    file.write('project(' + params.projectName + ' C CXX ASM)\n\n')
     file.write(cmake_header3)
 
     # add the preprocessor defines for overall configuration
