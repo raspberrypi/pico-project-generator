@@ -202,7 +202,7 @@ isMac = False
 isWindows = False
 
 class Parameters():
-    def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects, configs, runFromRAM, examples, uart, usb):
+    def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects, configs, runFromRAM, examples, uart, usb, cpp):
         self.sdkPath = sdkPath
         self.projectRoot = projectRoot
         self.projectName = projectName
@@ -216,6 +216,7 @@ class Parameters():
         self.wantExamples = examples
         self.wantUART = uart
         self.wantUSB = usb
+        self.wantCPP = cpp
 
 def GetBackground():
     return 'white'
@@ -652,6 +653,10 @@ class ProjectWindow(tk.Frame):
         self.wantRunFromRAM.set(args.runFromRAM)
         ttk.Checkbutton(coptionsSubframe, text="Run from RAM", variable=self.wantRunFromRAM).grid(row=0, column=1, padx=4, sticky=tk.W)
 
+        self.wantCPP = tk.IntVar()
+        self.wantCPP.set(args.cpp)
+        ttk.Checkbutton(coptionsSubframe, text="Generate C++", variable=self.wantCPP).grid(row=0, column=3, padx=4, sticky=tk.W)
+
         ttk.Button(coptionsSubframe, text="Advanced...", command=self.config).grid(row=0, column=4, sticky=tk.E)
 
         optionsRow += 2
@@ -712,7 +717,7 @@ class ProjectWindow(tk.Frame):
         p = Parameters(sdkPath=self.sdkpath, projectRoot=Path(projectPath), projectName=self.projectName.get(),
                        gui=True, overwrite=self.wantOverwrite.get(), build=self.wantBuild.get(),
                        features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
-                       examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get())
+                       examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get(), cpp=self.wantCPP.get())
 
         DoEverything(self, p)
 
@@ -773,14 +778,19 @@ def ParseCommandLine():
     parser.add_argument("-p", "--project", action='append', help="Generate projects files for IDE. Options are: vscode")
     parser.add_argument("-r", "--runFromRAM", action='store_true', help="Run the program from RAM rather than flash")
     parser.add_argument("-uart", "--uart", action='store_true', default=1, help="Console output to UART (default)")
+    parser.add_argument("-nouart", "--nouart", action='store_true', default=0, help="Disable console output to UART")
     parser.add_argument("-usb", "--usb", action='store_true', help="Console output to USB (disables other USB functionality")
+    parser.add_argument("-cpp", "--cpp", action='store_true', default=0, help="Generate C++ code")
 
     return parser.parse_args()
 
 
-def GenerateMain(folder, projectName, features):
+def GenerateMain(folder, projectName, features, cpp):
 
-    filename = Path(folder) / (projectName + '.c')
+    if cpp:
+        filename = Path(folder) / (projectName + '.cpp')
+    else:
+        filename = Path(folder) / (projectName + '.c')
 
     file = open(filename, 'w')
 
@@ -885,7 +895,11 @@ def GenerateCMake(folder, params):
     # No GUI/command line to set a different executable name at this stage
     executableName = params.projectName
 
-    file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c )\n\n')
+    if params.wantCPP:
+        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp )\n\n')
+    else:
+        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c )\n\n')
+
     file.write('pico_set_program_name(' + params.projectName + ' "' + executableName + '")\n')
     file.write('pico_set_program_version(' + params.projectName + ' "0.1")\n\n')
 
@@ -1077,7 +1091,7 @@ def DoEverything(parent, params):
     if params.wantExamples:
         features_and_examples = list(stdlib_examples_list.keys()) + features_and_examples
 
-    GenerateMain('.', params.projectName, features_and_examples)
+    GenerateMain('.', params.projectName, features_and_examples, params.wantCPP)
 
     GenerateCMake('.', params)
 
@@ -1121,6 +1135,8 @@ def DoEverything(parent, params):
 
 args = ParseCommandLine()
 
+if args.nouart:
+    args.uart = False
 
 # Check we have everything we need to compile etc
 c = CheckPrerequisites()
@@ -1175,7 +1191,7 @@ else :
     p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
                    gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
                    projects=args.project, configs=(), runFromRAM=args.runFromRAM,
-                   examples=args.examples, uart=args.uart, usb=args.usb)
+                   examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp)
 
     DoEverything(None, p)
 
