@@ -60,6 +60,9 @@ stdlib_examples_list = {
     'div' :     ("Low level HW Divider",    "divider.c",  "hardware/divider.h",   "hardware_divider")
 }
 
+debugger_list = ["SWD", "PicoProbe"]
+debugger_config_list = ["raspberrypi-swd.cfg", "picoprobe.cfg"]
+
 DEFINES = 0
 INITIALISERS = 1
 # Could add an extra item that shows how to use some of the available functions for the feature
@@ -202,7 +205,7 @@ isMac = False
 isWindows = False
 
 class Parameters():
-    def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects, configs, runFromRAM, examples, uart, usb, cpp):
+    def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects, configs, runFromRAM, examples, uart, usb, cpp, debugger):
         self.sdkPath = sdkPath
         self.projectRoot = projectRoot
         self.projectName = projectName
@@ -217,6 +220,7 @@ class Parameters():
         self.wantUART = uart
         self.wantUSB = usb
         self.wantCPP = cpp
+        self.debugger = debugger
 
 def GetBackground():
     return 'white'
@@ -241,6 +245,8 @@ def RunGUI(sdkpath, args):
     ttk.Style().configure("TRadiobutton", foreground=GetTextColour(), background=GetBackground() )
     ttk.Style().configure("TLabelframe", foreground=GetTextColour(), background=GetBackground() )
     ttk.Style().configure("TLabelframe.Label", foreground=GetTextColour(), background=GetBackground() )
+    ttk.Style().configure("TCombobox", foreground=GetTextColour(), background=GetBackground() )
+    ttk.Style().configure("TListbox", foreground=GetTextColour(), background=GetBackground() )
 
     app = ProjectWindow(root, sdkpath, args)
 
@@ -668,14 +674,25 @@ class ProjectWindow(tk.Frame):
 
         self.wantBuild = tk.IntVar()
         self.wantBuild.set(args.build)
-        ttk.Checkbutton(boptionsSubframe, text="Run build", variable=self.wantBuild).grid(row=0, column=0, padx=4, sticky=tk.W)
+        ttk.Checkbutton(boptionsSubframe, text="Run build after generation", variable=self.wantBuild).grid(row=0, column=0, padx=4, sticky=tk.W)
 
         self.wantOverwrite = tk.IntVar()
         self.wantOverwrite.set(args.overwrite)
-        ttk.Checkbutton(boptionsSubframe, text="Overwrite project", variable=self.wantOverwrite).grid(row=0, column=1, padx=4, sticky=tk.W)
+        ttk.Checkbutton(boptionsSubframe, text="Overwrite project if it already exists", variable=self.wantOverwrite).grid(row=0, column=1, padx=4, sticky=tk.W)
+
+        optionsRow += 2
+
+        vscodeoptionsSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="IDE Options")
+        vscodeoptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantVSCode = tk.IntVar()
-        ttk.Checkbutton(boptionsSubframe, text="Create VSCode project", variable=self.wantVSCode).grid(row=0, column=2, padx=4, sticky=tk.W)
+        ttk.Checkbutton(vscodeoptionsSubframe, text="Create VSCode project", variable=self.wantVSCode).grid(row=0, column=0, padx=4, sticky=tk.W)
+
+        ttk.Label(vscodeoptionsSubframe, text = "     Debugger:").grid(row=0, column=1, padx=4, sticky=tk.W)
+
+        self.debugger = ttk.Combobox(vscodeoptionsSubframe, values=debugger_list, state="readonly")
+        self.debugger.grid(row=0, column=2, padx=4, sticky=tk.W)
+        self.debugger.current(args.debugger)
 
         optionsRow += 2
 
@@ -717,7 +734,8 @@ class ProjectWindow(tk.Frame):
         p = Parameters(sdkPath=self.sdkpath, projectRoot=Path(projectPath), projectName=self.projectName.get(),
                        gui=True, overwrite=self.wantOverwrite.get(), build=self.wantBuild.get(),
                        features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
-                       examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get(), cpp=self.wantCPP.get())
+                       examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get(), cpp=self.wantCPP.get(),
+                       debugger=self.debugger.current())
 
         DoEverything(self, p)
 
@@ -781,6 +799,7 @@ def ParseCommandLine():
     parser.add_argument("-nouart", "--nouart", action='store_true', default=0, help="Disable console output to UART")
     parser.add_argument("-usb", "--usb", action='store_true', help="Console output to USB (disables other USB functionality")
     parser.add_argument("-cpp", "--cpp", action='store_true', default=0, help="Generate C++ code")
+    parser.add_argument("-d", "--debugger", type=int, help="Select debugger (0 = SWD, 1 = PicoProbe)", default=0)
 
     return parser.parse_args()
 
@@ -938,12 +957,15 @@ def GenerateCMake(folder, params):
 
 
 # Generates the requested project files, if any
-def generateProjectFiles(projectPath, projectName, sdkPath, projects):
+def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
 
     oldCWD = os.getcwd()
 
     os.chdir(projectPath)
 
+    deb = debugger_config_list[debugger]
+
+   # if debugger==0 else 'picoprobe.cfg
     for p in projects :
         if p == 'vscode':
             v1 = ('{\n'
@@ -955,17 +977,23 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects):
                   '    {\n'
                   '      "name": "Cortex Debug",\n'
                   '      "cwd": "${workspaceRoot}",\n'
-                  '      "executable": "${workspaceRoot}/build/' + projectName + '.elf",\n'
+                  '      "executable": "${command:cmake.launchTargetPath}",\n'
                   '      "request": "launch",\n'
                   '      "type": "cortex-debug",\n'
                   '      "servertype": "openocd",\n'
-                  '      "device": "Pico2040",\n'
+                  '      "gdbPath": "gdb-multiarch",\n'
+                  '      "device": "RP2040",\n'
                   '      "configFiles": [\n' + \
-                  '        "interface/raspberrypi-swd.cfg",\n' + \
+                  '        "interface/' + deb + '",\n' + \
                   '        "target/rp2040.cfg"\n' + \
                   '        ],\n' +  \
-                  '      "svdFile": "' + str(sdkPath) + '/src/rp2040/hardware_regs/rp2040.svd",\n'
+                  '      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",\n'
                   '      "runToMain": true,\n'
+                  '      // Give restart the same functionality as runToMain\n'
+                  '      "postRestartCommands": [\n'
+                  '          "break main",\n'
+                  '          "continue"\n'
+                  '      ]\n'
                   '    }\n'
                   '  ]\n'
                   '}\n')
@@ -1118,7 +1146,7 @@ def DoEverything(parent, params):
         os.system(cmakeCmd)
 
     if params.projects:
-        generateProjectFiles(projectPath, params.projectName, params.sdkPath, params.projects)
+        generateProjectFiles(projectPath, params.projectName, params.sdkPath, params.projects, params.debugger)
 
     if params.wantBuild:
         if params.wantGUI:
@@ -1137,6 +1165,10 @@ args = ParseCommandLine()
 
 if args.nouart:
     args.uart = False
+
+#  TODO this could be better, need some constants etc
+if args.debugger > 1:
+    args.debugger = 0
 
 # Check we have everything we need to compile etc
 c = CheckPrerequisites()
@@ -1191,7 +1223,7 @@ else :
     p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
                    gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
                    projects=args.project, configs=(), runFromRAM=args.runFromRAM,
-                   examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp)
+                   examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, debugger=args.debugger)
 
     DoEverything(None, p)
 
