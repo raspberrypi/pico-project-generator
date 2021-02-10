@@ -982,7 +982,11 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '      "type": "cortex-debug",\n'
                   '      "servertype": "openocd",\n'
                   '      "gdbPath": "gdb-multiarch",\n'
+<<<<<<< HEAD
                   '      "device": "RP2040",\n'
+=======
+                  '      "device": "Pico2040",\n'
+>>>>>>> Add a debugger selection options, some GUI rearrangement. Update readme
                   '      "configFiles": [\n' + \
                   '        "interface/' + deb + '",\n' + \
                   '        "target/rp2040.cfg"\n' + \
