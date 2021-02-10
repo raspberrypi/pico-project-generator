@@ -799,6 +799,7 @@ def CheckSDKPath(gui):
 def ParseCommandLine():
     parser = argparse.ArgumentParser(description='Pico Project generator')
     parser.add_argument("name", nargs="?", help="Name of the project")
+    parser.add_argument("-t", "--tsv", help="Set an alternative pico_configs.tsv file", default="pico_configs.tsv")
     parser.add_argument("-o", "--output", help="Set an alternative CMakeList.txt filename", default="CMakeLists.txt")
     parser.add_argument("-x", "--examples", action='store_true', help="Add example code for the Pico standard library")
     parser.add_argument("-l", "--list", action='store_true', help="List available features")
@@ -1101,7 +1102,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
 
 def LoadConfigurations():
     try:
-        with open("pico_configs.tsv") as tsvfile:
+        with open(args.tsv) as tsvfile:
             reader = csv.DictReader(tsvfile, dialect='excel-tab')
             for row in reader:
                 configuration_dictionary.append(row)
