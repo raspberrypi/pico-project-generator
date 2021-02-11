@@ -205,7 +205,8 @@ isMac = False
 isWindows = False
 
 class Parameters():
-    def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects, configs, runFromRAM, examples, uart, usb, cpp, debugger):
+    def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects,
+                 configs, runFromRAM, examples, uart, usb, cpp, debugger, exceptions, rtti):
         self.sdkPath = sdkPath
         self.projectRoot = projectRoot
         self.projectName = projectName
@@ -221,6 +222,8 @@ class Parameters():
         self.wantUSB = usb
         self.wantCPP = cpp
         self.debugger = debugger
+        self.exceptions = exceptions
+        self.rtti = rtti
 
 def GetBackground():
     return 'white'
@@ -649,7 +652,7 @@ class ProjectWindow(tk.Frame):
 
         # Code options section
         coptionsSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="Code Options")
-        coptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
+        coptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=3, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantExamples = tk.IntVar()
         self.wantExamples.set(args.examples)
@@ -665,7 +668,15 @@ class ProjectWindow(tk.Frame):
 
         ttk.Button(coptionsSubframe, text="Advanced...", command=self.config).grid(row=0, column=4, sticky=tk.E)
 
-        optionsRow += 2
+        self.wantCPPExceptions = tk.IntVar()
+        self.wantCPPExceptions.set(args.cppexceptions)
+        ttk.Checkbutton(coptionsSubframe, text="Enable C++ exceptions", variable=self.wantCPPExceptions).grid(row=1, column=0, padx=4, sticky=tk.W)
+
+        self.wantCPPRTTI = tk.IntVar()
+        self.wantCPPRTTI.set(args.cpprtti)
+        ttk.Checkbutton(coptionsSubframe, text="Enable C++ RTTI", variable=self.wantCPPRTTI).grid(row=1, column=1, padx=4, sticky=tk.W)
+
+        optionsRow += 3
 
         # Build Options section
 
@@ -735,7 +746,7 @@ class ProjectWindow(tk.Frame):
                        gui=True, overwrite=self.wantOverwrite.get(), build=self.wantBuild.get(),
                        features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
                        examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get(), cpp=self.wantCPP.get(),
-                       debugger=self.debugger.current())
+                       debugger=self.debugger.current(), exceptions=self.wantCPPExceptions, rtti=self.wantCPPRTTI)
 
         DoEverything(self, p)
 
@@ -799,6 +810,8 @@ def ParseCommandLine():
     parser.add_argument("-nouart", "--nouart", action='store_true', default=0, help="Disable console output to UART")
     parser.add_argument("-usb", "--usb", action='store_true', help="Console output to USB (disables other USB functionality")
     parser.add_argument("-cpp", "--cpp", action='store_true', default=0, help="Generate C++ code")
+    parser.add_argument("-cpprtti", "--cpprtti", action='store_true', default=0, help="Enable C++ RTTI (Uses more memory)")
+    parser.add_argument("-cppex", "--cppexceptions", action='store_true', default=0, help="Enable C++ exceptions (Uses more memory)")
     parser.add_argument("-d", "--debugger", type=int, help="Select debugger (0 = SWD, 1 = PicoProbe)", default=0)
 
     return parser.parse_args()
@@ -881,7 +894,7 @@ def GenerateCMake(folder, params):
                 )
 
     cmake_header3 = (
-                "# Initialise the Pico SDK\n"
+                "\n# Initialise the Pico SDK\n"
                 "pico_sdk_init()\n\n"
                 "# Add executable. Default name is the project name, version 0.1\n\n"
                 )
@@ -901,7 +914,14 @@ def GenerateCMake(folder, params):
 
     file.write('set(PICO_SDK_PATH ' + p + ')\n\n')
     file.write(cmake_header2)
-    file.write('project(' + params.projectName + ' C CXX ASM)\n\n')
+    file.write('project(' + params.projectName + ' C CXX ASM)\n')
+
+    if params.exceptions:
+        file.write("\nset(PICO_CXX_ENABLE_EXCEPTIONS 1)\n")
+
+    if params.rtti:
+        file.write("\nset(PICO_CXX_ENABLE_RTTI 1)\n")
+
     file.write(cmake_header3)
 
     # add the preprocessor defines for overall configuration
@@ -982,11 +1002,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '      "type": "cortex-debug",\n'
                   '      "servertype": "openocd",\n'
                   '      "gdbPath": "gdb-multiarch",\n'
-<<<<<<< HEAD
                   '      "device": "RP2040",\n'
-=======
-                  '      "device": "Pico2040",\n'
->>>>>>> Add a debugger selection options, some GUI rearrangement. Update readme
                   '      "configFiles": [\n' + \
                   '        "interface/' + deb + '",\n' + \
                   '        "target/rp2040.cfg"\n' + \
@@ -1227,7 +1243,7 @@ else :
     p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
                    gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
                    projects=args.project, configs=(), runFromRAM=args.runFromRAM,
-                   examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, debugger=args.debugger)
+                   examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, debugger=args.debugger, exceptions=args.cppexceptions, rtti=args.cpprtti)
 
     DoEverything(None, p)
 
