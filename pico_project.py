@@ -938,7 +938,7 @@ def GenerateCMake(folder, params):
     # No GUI/command line to set a different executable name at this stage
     executableName = params.projectName
     
-    file(GLOB INCLUDES "include/*.c" "include/*.C" "include/*.c++" "include/*.cc" "include/*.cpp" "include/*.cxx" "include/*.cu" "include/*.m" "include/*.M" "include/*.mm" "include/*.h" "include/*.hh" "include/*.h++" "include/*.hm" "include/*.hpp" "include/*.hxx" "include/*.in" "include/*.txx")
+    file.write('file(GLOB INCLUDES "include/*.c" "include/*.C" "include/*.c++" "include/*.cc" "include/*.cpp" "include/*.cxx" "include/*.cu" "include/*.m" "include/*.M" "include/*.mm" "include/*.h" "include/*.hh" "include/*.h++" "include/*.hm" "include/*.hpp" "include/*.hxx" "include/*.in" "include/*.txx")\n')
 
     if params.wantCPP:
         file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp ${INCLUDES})\n\n')
