@@ -937,11 +937,13 @@ def GenerateCMake(folder, params):
 
     # No GUI/command line to set a different executable name at this stage
     executableName = params.projectName
+    
+    file.write('file(GLOB INCLUDES "*.c" "*.C" "*.c++" "*.cc" "*.cpp" "*.cxx" "*.cu" "*.m" "*.M" "*.mm" "*.h" "*.hh" "*.h++" "*.hm" "*.hpp" "*.hxx" "*.in" "*.txx")\n')
 
     if params.wantCPP:
-        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp include/*)\n\n')
+        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp ${INCLUDES})\n\n')
     else:
-        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c include/*)\n\n')
+        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c ${INCLUDES})\n\n')
 
     file.write('pico_set_program_name(' + params.projectName + ' "' + executableName + '")\n')
     file.write('pico_set_program_version(' + params.projectName + ' "0.1")\n\n')
