@@ -924,6 +924,10 @@ def GenerateCMake(folder, params):
 
     file.write(cmake_header3)
 
+    #Add a folder with your own libraries
+    file.write('#Folder for your own libraries\n')
+    file.write('include_directories(include)\n')
+
     # add the preprocessor defines for overall configuration
     if params.configs:
         file.write('# Add any PICO_CONFIG entries specified in the Advanced settings\n')
@@ -1053,6 +1057,9 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                    '               },\n'
                    '     },\n'
                    '}\n')
+
+            # Create a Include folder
+            os.mkdir("include")
 
             # Create a build folder, and run our cmake project build from it
             if not os.path.exists(VSCODE_FOLDER):
