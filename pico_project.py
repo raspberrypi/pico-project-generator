@@ -939,9 +939,9 @@ def GenerateCMake(folder, params):
     executableName = params.projectName
 
     if params.wantCPP:
-        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp )\n\n')
+        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp include/*)\n\n')
     else:
-        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c )\n\n')
+        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c include/*)\n\n')
 
     file.write('pico_set_program_name(' + params.projectName + ' "' + executableName + '")\n')
     file.write('pico_set_program_version(' + params.projectName + ' "0.1")\n\n')
