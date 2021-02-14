@@ -924,6 +924,10 @@ def GenerateCMake(folder, params):
 
     file.write(cmake_header3)
 
+    #Add a folder with your own libraries
+    file.write('#Folder for your own libraries\n')
+    file.write('include_directories(include)\n')
+
     # add the preprocessor defines for overall configuration
     if params.configs:
         file.write('# Add any PICO_CONFIG entries specified in the Advanced settings\n')
@@ -933,11 +937,13 @@ def GenerateCMake(folder, params):
 
     # No GUI/command line to set a different executable name at this stage
     executableName = params.projectName
+    
+    file(GLOB INCLUDES "include/*.c" "include/*.C" "include/*.c++" "include/*.cc" "include/*.cpp" "include/*.cxx" "include/*.cu" "include/*.m" "include/*.M" "include/*.mm" "include/*.h" "include/*.hh" "include/*.h++" "include/*.hm" "include/*.hpp" "include/*.hxx" "include/*.in" "include/*.txx")
 
     if params.wantCPP:
-        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp )\n\n')
+        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp ${INCLUDES})\n\n')
     else:
-        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c )\n\n')
+        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c ${INCLUDES})\n\n')
 
     file.write('pico_set_program_name(' + params.projectName + ' "' + executableName + '")\n')
     file.write('pico_set_program_version(' + params.projectName + ' "0.1")\n\n')
@@ -1053,6 +1059,9 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                    '               },\n'
                    '     },\n'
                    '}\n')
+
+            # Create a Include folder
+            os.mkdir("include")
 
             # Create a build folder, and run our cmake project build from it
             if not os.path.exists(VSCODE_FOLDER):
