@@ -30,6 +30,7 @@ VSCODE_LAUNCH_FILENAME = 'launch.json'
 VSCODE_C_PROPERTIES_FILENAME = 'c_cpp_properties.json'
 VSCODE_SETTINGS_FILENAME ='settings.json'
 VSCODE_FOLDER='.vscode'
+INCLUDE_FOLDER='include'
 
 CONFIG_UNSET="Not set"
 
@@ -1060,9 +1061,6 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                    '     },\n'
                    '}\n')
 
-            # Create a Include folder
-            os.mkdir("include")
-
             # Create a build folder, and run our cmake project build from it
             if not os.path.exists(VSCODE_FOLDER):
                 os.mkdir(VSCODE_FOLDER)
@@ -1151,6 +1149,10 @@ def DoEverything(parent, params):
     GenerateMain('.', params.projectName, features_and_examples, params.wantCPP)
 
     GenerateCMake('.', params)
+    
+    # Create a Include folder
+    if not os.path.exists(INCLUDE_FOLDER):
+        os.mkdir(INCLUDE_FOLDER)
 
     # Create a build folder, and run our cmake project build from it
     if not os.path.exists('build'):
