@@ -1,6 +1,6 @@
 # pico-project-generator
 
-This is a command line or GUI tool, written in Python, to automatically generate a Pico C SDK Project.
+This is a command line or GUI tool, written in Python, to automatically generate a Raspberry Pi Pico C SDK Project.
 
 The tool will generate all required CMake files, program files and VSCode IDE files for the set of features requested.
 
@@ -43,13 +43,20 @@ optional arguments:
 You can list the features supported by the tools by using `./pico_project --list`. These features can
 be added to the project using the `--feature` options, this can be used multiple times.
 
-
-
 ## GUI version
 
 The GUI version of the tool, run by adding `--gui` to the command line, uses `tkinter` to provide a platform agnostic script that will run on Linux, Mac and Windows. All the options from the command line tool are also supported in the GUI.
 
 You can add specific features to your project by selecting them from the check boxes on the GUI. This will ensure the build system adds the appropriate code to the build, and also adds simple example code to the project showing how to use the feature. There are a number of options available, which provide the following functionality.
+
+## Installation using Python Pip (Linux)
+
+Clone the repository with: `$ git clone https://github.com/raspberrypi/pico-project-generator` (assuming you are using HTTP to clone repositories). Change to the repository's directory with: `$ cd pico-project-generator`.
+
+The package can then be installed for the current user using: `$ pip install .`, or for the all system users using `$ sudo pip install .`.
+
+You can now run the package with `$ pico_project` plus any arguments detailed below, e.g. `$ pico_project --gui`.
+
 
 Console Options | Description
 ----------------|-----------
@@ -75,12 +82,4 @@ IDE Options | Description
 
 Create VSCode Project | As well as the CMake files, also create the appropriate Visual Studio Code project files.
 Debugger | Use the specified debugger in the IDE
-
-
-
-
-
-
-
-
 
