@@ -748,7 +748,7 @@ class ProjectWindow(tk.Frame):
                        gui=True, overwrite=self.wantOverwrite.get(), build=self.wantBuild.get(),
                        features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
                        examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get(), cpp=self.wantCPP.get(),
-                       debugger=self.debugger.current(), exceptions=self.wantCPPExceptions, rtti=self.wantCPPRTTI)
+                       debugger=self.debugger.current(), exceptions=self.wantCPPExceptions.get(), rtti=self.wantCPPRTTI.get())
 
         DoEverything(self, p)
 
