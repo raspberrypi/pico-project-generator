@@ -570,6 +570,8 @@ class ConfigurationWindow(tk.Toplevel):
         for i, val in enumerate(self.valuelist.get(0, tk.END)):
             if val != CONFIG_UNSET:
                 self.results[self.namelist.get(i)] = val
+            else:
+                self.results.pop(self.namelist.get(i), None)
 
         self.destroy()
 
@@ -928,7 +930,11 @@ def GenerateCMake(folder, params):
     if params.configs:
         file.write('# Add any PICO_CONFIG entries specified in the Advanced settings\n')
         for c, v in params.configs.items():
-            file.write('add_compile_definitions(-D' + c + '=' + v + ')\n')
+            if v == "True":
+                v = "1"
+            elif v == "False":
+                 v = "0"
+            file.write('add_compile_definitions(' + c + '=' + v + ')\n')
         file.write('\n')
 
     # No GUI/command line to set a different executable name at this stage
