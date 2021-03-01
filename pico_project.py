@@ -933,7 +933,7 @@ def GenerateCMake(folder, params):
             if v == "True":
                 v = "1"
             elif v == "False":
-                 v = "0"
+                v = "0"
             file.write('add_compile_definitions(' + c + '=' + v + ')\n')
         file.write('\n')
 
