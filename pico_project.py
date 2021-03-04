@@ -779,13 +779,13 @@ def CheckSDKPath(gui):
     sdkPath = os.getenv('PICO_SDK_PATH')
 
     if sdkPath == None:
-        m = 'Unabled to locate the Raspberry Pi Pico SDK, PICO_SDK_PATH is not set'
+        m = 'Unable to locate the Raspberry Pi Pico SDK, PICO_SDK_PATH is not set'
         if (gui):
             RunWarning(m)
         else:
             print(m)
     elif not os.path.isdir(sdkPath):
-        m = 'Unabled to locate the Raspberry Pi Pico SDK, PICO_SDK_PATH does not point to a directory'
+        m = 'Unable to locate the Raspberry Pi Pico SDK, PICO_SDK_PATH does not point to a directory'
         if (gui):
             RunWarning(m)
         else:
