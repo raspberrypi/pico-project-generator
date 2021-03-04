@@ -891,12 +891,12 @@ def GenerateCMake(folder, params):
                  "# (note this can come from environment, CMake cache etc)\n"
                 )
 
-    cmake_header2 = ("# Pull in Pico SDK (must be before project)\n"
+    cmake_header2 = ("# Pull in Raspberry Pi Pico SDK (must be before project)\n"
                 "include(pico_sdk_import.cmake)\n\n"
                 )
 
     cmake_header3 = (
-                "\n# Initialise the Pico SDK\n"
+                "\n# Initialise the Raspberry Pi Pico SDK\n"
                 "pico_sdk_init()\n\n"
                 "# Add executable. Default name is the project name, version 0.1\n\n"
                 )
