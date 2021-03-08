@@ -29,6 +29,7 @@ COMPILER_NAME='arm-none-eabi-gcc'
 VSCODE_LAUNCH_FILENAME = 'launch.json'
 VSCODE_C_PROPERTIES_FILENAME = 'c_cpp_properties.json'
 VSCODE_SETTINGS_FILENAME ='settings.json'
+VSCODE_EXTENSIONS_FILENAME ='extensions.json'
 VSCODE_FOLDER='.vscode'
 
 CONFIG_UNSET="Not set"
@@ -1061,6 +1062,14 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                    '     },\n'
                    '}\n')
 
+            e1 = ( '{\n'
+                   '  "recommendations": [\n'
+                   '    "marus25.cortex-debug",\n'
+                   '    "ms-vscode.cmake-tools",\n'
+                   '    "ms-vscode.cpptools"\n'
+                   '  ]\n'
+                   '}\n')
+
             # Create a build folder, and run our cmake project build from it
             if not os.path.exists(VSCODE_FOLDER):
                 os.mkdir(VSCODE_FOLDER)
@@ -1078,6 +1087,10 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
 
             file = open(VSCODE_SETTINGS_FILENAME, 'w')
             file.write(s1)
+            file.close()
+
+            file = open(VSCODE_EXTENSIONS_FILENAME, 'w')
+            file.write(e1)
             file.close()
 
         else :
