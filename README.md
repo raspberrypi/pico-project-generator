@@ -20,7 +20,7 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -t TSV, --tsv TSV     Set an alternative pico_configs.tsv file
+  -t TSV, --tsv TSV     Select an alternative pico_configs.tsv file
   -o OUTPUT, --output OUTPUT
                         Set an alternative CMakeList.txt filename
   -x, --examples        Add example code for the Pico standard library
