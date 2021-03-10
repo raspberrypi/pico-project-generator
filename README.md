@@ -35,14 +35,10 @@ optional arguments:
                         Generate projects files for IDE. Options are: vscode
   -r, --runFromRAM      Run the program from RAM rather than flash
   -uart, --uart         Console output to UART (default)
-<<<<<<< HEAD
   -nouart, --nouart     Disable console output to UART
   -usb, --usb           Console output to USB (disables other USB functionality)
    cpp, --cpp           Generate C++ code
   -d DEBUGGER, --debugger DEBUGGER   Select debugger (0 = SWD, 1 = PicoProbe)
-=======
-  -usb, --usb           Console output to USB (disables other USB functionality
->>>>>>> 5ba387a (update README help with new option)
 ```
 You can list the features supported by the tools by using `./pico_project --list`. These features can
 be added to the project using the `--feature` options, this can be used multiple times.
