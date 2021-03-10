@@ -11,7 +11,7 @@ It will also add example code for any features and optionally for some standard 
 Running `./pico_project --help` will give a list of the available command line parameters
 
 ```
-usage: pico_project.py [-h] [-o OUTPUT] [-x] [-l] [-c] [-f FEATURE] [-over] [-b] [-g] [-p PROJECT] [-r] [-uart] [-usb] [name]
+usage: pico_project.py [-h] [-t TSV] [-o OUTPUT] [-x] [-l] [-c] [-f FEATURE] [-over] [-b] [-g] [-p PROJECT] [-r] [-uart] [-usb] [name]
 
 Pico Project generator
 
@@ -20,6 +20,7 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
+  -t TSV, --tsv TSV     Select an alternative pico_configs.tsv file
   -o OUTPUT, --output OUTPUT
                         Set an alternative CMakeList.txt filename
   -x, --examples        Add example code for the Pico standard library
