@@ -49,15 +49,6 @@ The GUI version of the tool, run by adding `--gui` to the command line, uses `tk
 
 You can add specific features to your project by selecting them from the check boxes on the GUI. This will ensure the build system adds the appropriate code to the build, and also adds simple example code to the project showing how to use the feature. There are a number of options available, which provide the following functionality.
 
-## Installation using Python Pip (Linux)
-
-Clone the repository with: `$ git clone https://github.com/raspberrypi/pico-project-generator` (assuming you are using HTTP to clone repositories). Change to the repository's directory with: `$ cd pico-project-generator`.
-
-The package can then be installed for the current user using: `$ pip install .`, or for the all system users using `$ sudo pip install .`.
-
-You can now run the package with `$ pico_project` plus any arguments detailed below, e.g. `$ pico_project --gui`.
-
-
 Console Options | Description
 ----------------|-----------
 Console over UART | Enable a serial console over the UART. This is the default.
@@ -82,4 +73,17 @@ IDE Options | Description
 
 Create VSCode Project | As well as the CMake files, also create the appropriate Visual Studio Code project files.
 Debugger | Use the specified debugger in the IDE
+
+
+## Optional: Installation using Python Pip (Linux)
+
+This application can **optionally** be installed to your system using standard Python installation tools. If you would like to do so, follow the instructions below. If you do not wish to install the application, you can run it from the the pico_project directory.
+
+Clone the repository with: `$ git clone https://github.com/raspberrypi/pico-project-generator` (assuming you are using HTTP to clone repositories). Change to the repository's directory with: `$ cd pico-project-generator`.
+
+The package can then be installed for the current user using: `$ pip install .`, or for all users using `$ sudo pip install .`.
+
+You can now run the application from any directory with `$ pico_project` plus any arguments detailed in this README, e.g. `$ pico_project --gui`.
+
+The package can be uninstalled with `$ pip uninstall pico-project-generator`.
 
