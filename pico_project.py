@@ -1054,12 +1054,6 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                    '    "launch" : {\n'
                    '      "visibility": "hidden"\n'
                    '               },\n'
-                   '    "build" : {\n'
-                   '      "visibility": "hidden"\n'
-                   '               },\n'
-                   '    "buildTarget" : {\n'
-                   '      "visibility": "hidden"\n'
-                   '               },\n'
                    '     },\n'
                    '}\n')
 
