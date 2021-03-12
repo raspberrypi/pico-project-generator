@@ -14,6 +14,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 import tkinter as tk
@@ -295,7 +296,6 @@ class ChecklistBox(tk.Frame):
         return values
 
 
-import threading
 
 
 def thread_function(text, command, ok):
@@ -1213,7 +1213,7 @@ if args.debugger > 1:
 # Check we have everything we need to compile etc
 c = CheckPrerequisites()
 
-## TODO Do both warnings in the same error message so user does have to keep coming back to find still more to do
+# TODO Do both warnings in the same error message so user does have to keep coming back to find still more to do
 
 if c == None:
     m = 'Unable to find the `' + COMPILER_NAME + '` compiler\n'
