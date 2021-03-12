@@ -828,59 +828,58 @@ def GenerateMain(folder, projectName, features, cpp):
     else:
         filename = Path(folder) / (projectName + '.c')
 
-    file = open(filename, 'w')
+    with open(filename, 'w') as file:
 
-    main = ('#include <stdio.h>\n'
-            '#include "pico/stdlib.h"\n'
-            )
-    file.write(main)
+        main = ('#include <stdio.h>\n'
+                '#include "pico/stdlib.h"\n'
+                )
+        file.write(main)
 
-    if (features):
+        if (features):
 
-        # Add any includes
-        for feat in features:
-            if (feat in features_list):
-                o = '#include "' +  features_list[feat][H_FILE] + '"\n'
-                file.write(o)
-            if (feat in stdlib_examples_list):
-                o = '#include "' +  stdlib_examples_list[feat][H_FILE] + '"\n'
-                file.write(o)
+            # Add any includes
+            for feat in features:
+                if (feat in features_list):
+                    o = '#include "' +  features_list[feat][H_FILE] + '"\n'
+                    file.write(o)
+                if (feat in stdlib_examples_list):
+                    o = '#include "' +  stdlib_examples_list[feat][H_FILE] + '"\n'
+                    file.write(o)
 
-        file.write('\n')
+            file.write('\n')
 
-        # Add any defines
-        for feat in features:
-            if (feat in code_fragments_per_feature):
-                for s in code_fragments_per_feature[feat][DEFINES]:
-                    file.write(s)
+            # Add any defines
+            for feat in features:
+                if (feat in code_fragments_per_feature):
+                    for s in code_fragments_per_feature[feat][DEFINES]:
+                        file.write(s)
+                        file.write('\n')
                     file.write('\n')
-                file.write('\n')
 
-    main = ('\n\n'
-            'int main()\n'
-            '{\n'
-            '    stdio_init_all();\n\n'
-            )
+        main = ('\n\n'
+                'int main()\n'
+                '{\n'
+                '    stdio_init_all();\n\n'
+                )
 
-    if (features):
-        # Add any initialisers
-        indent = 4
-        for feat in features:
-            if (feat in code_fragments_per_feature):
-                for s in code_fragments_per_feature[feat][INITIALISERS]:
-                    main += (" " * indent)
-                    main += s
-                    main += '\n'
-            main += '\n'
+        if (features):
+            # Add any initialisers
+            indent = 4
+            for feat in features:
+                if (feat in code_fragments_per_feature):
+                    for s in code_fragments_per_feature[feat][INITIALISERS]:
+                        main += (" " * indent)
+                        main += s
+                        main += '\n'
+                main += '\n'
 
-    main += ('    puts("Hello, world!");\n\n'
-             '    return 0;\n'
-             '}\n'
-            )
+        main += ('    puts("Hello, world!");\n\n'
+                 '    return 0;\n'
+                 '}\n'
+                )
 
-    file.write(main)
+        file.write(main)
 
-    file.close()
 
 
 def GenerateCMake(folder, params):
@@ -906,82 +905,80 @@ def GenerateCMake(folder, params):
 
     filename = Path(folder) / CMAKELIST_FILENAME
 
-    file = open(filename, 'w')
+    with open(filename, 'w') as file:
 
-    file.write(cmake_header1)
+        file.write(cmake_header1)
 
-    # OK, for the path, CMake will accept forward slashes on Windows, and thats
-    # seemingly a bit easier to handle than the backslashes
+        # OK, for the path, CMake will accept forward slashes on Windows, and thats
+        # seemingly a bit easier to handle than the backslashes
 
-    p = str(params.sdkPath).replace('\\','/')
-    p = '\"' + p + '\"'
+        p = str(params.sdkPath).replace('\\','/')
+        p = '\"' + p + '\"'
 
-    file.write('set(PICO_SDK_PATH ' + p + ')\n\n')
-    file.write(cmake_header2)
-    file.write('project(' + params.projectName + ' C CXX ASM)\n')
+        file.write('set(PICO_SDK_PATH ' + p + ')\n\n')
+        file.write(cmake_header2)
+        file.write('project(' + params.projectName + ' C CXX ASM)\n')
 
-    if params.exceptions:
-        file.write("\nset(PICO_CXX_ENABLE_EXCEPTIONS 1)\n")
+        if params.exceptions:
+            file.write("\nset(PICO_CXX_ENABLE_EXCEPTIONS 1)\n")
 
-    if params.rtti:
-        file.write("\nset(PICO_CXX_ENABLE_RTTI 1)\n")
+        if params.rtti:
+            file.write("\nset(PICO_CXX_ENABLE_RTTI 1)\n")
 
-    file.write(cmake_header3)
+        file.write(cmake_header3)
 
-    # add the preprocessor defines for overall configuration
-    if params.configs:
-        file.write('# Add any PICO_CONFIG entries specified in the Advanced settings\n')
-        for c, v in params.configs.items():
-            if v == "True":
-                v = "1"
-            elif v == "False":
-                v = "0"
-            file.write('add_compile_definitions(' + c + '=' + v + ')\n')
-        file.write('\n')
+        # add the preprocessor defines for overall configuration
+        if params.configs:
+            file.write('# Add any PICO_CONFIG entries specified in the Advanced settings\n')
+            for c, v in params.configs.items():
+                if v == "True":
+                    v = "1"
+                elif v == "False":
+                    v = "0"
+                file.write('add_compile_definitions(' + c + '=' + v + ')\n')
+            file.write('\n')
 
-    # No GUI/command line to set a different executable name at this stage
-    executableName = params.projectName
+        # No GUI/command line to set a different executable name at this stage
+        executableName = params.projectName
 
-    if params.wantCPP:
-        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp )\n\n')
-    else:
-        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c )\n\n')
+        if params.wantCPP:
+            file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp )\n\n')
+        else:
+            file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c )\n\n')
 
-    file.write('pico_set_program_name(' + params.projectName + ' "' + executableName + '")\n')
-    file.write('pico_set_program_version(' + params.projectName + ' "0.1")\n\n')
+        file.write('pico_set_program_name(' + params.projectName + ' "' + executableName + '")\n')
+        file.write('pico_set_program_version(' + params.projectName + ' "0.1")\n\n')
 
-    if params.wantRunFromRAM:
-        file.write('# no_flash means the target is to run from RAM\n')
-        file.write('pico_set_binary_type(' + params.projectName + ' no_flash)\n\n')
+        if params.wantRunFromRAM:
+            file.write('# no_flash means the target is to run from RAM\n')
+            file.write('pico_set_binary_type(' + params.projectName + ' no_flash)\n\n')
 
-    # Console output destinations
-    if params.wantUART:
-        file.write('pico_enable_stdio_uart(' + params.projectName + ' 1)\n')
-    else:
-        file.write('pico_enable_stdio_uart(' + params.projectName + ' 0)\n')
+        # Console output destinations
+        if params.wantUART:
+            file.write('pico_enable_stdio_uart(' + params.projectName + ' 1)\n')
+        else:
+            file.write('pico_enable_stdio_uart(' + params.projectName + ' 0)\n')
 
-    if params.wantUSB:
-        file.write('pico_enable_stdio_usb(' + params.projectName + ' 1)\n\n')
-    else:
-        file.write('pico_enable_stdio_usb(' + params.projectName + ' 0)\n\n')
+        if params.wantUSB:
+            file.write('pico_enable_stdio_usb(' + params.projectName + ' 1)\n\n')
+        else:
+            file.write('pico_enable_stdio_usb(' + params.projectName + ' 0)\n\n')
 
-    # Standard libraries
-    file.write('# Add the standard library to the build\n')
-    file.write('target_link_libraries(' + params.projectName + ' ' + STANDARD_LIBRARIES + ')\n\n')
+        # Standard libraries
+        file.write('# Add the standard library to the build\n')
+        file.write('target_link_libraries(' + params.projectName + ' ' + STANDARD_LIBRARIES + ')\n\n')
 
 
-    # Selected libraries/features
-    if (params.features):
-        file.write('# Add any user requested libraries\n')
-        file.write('target_link_libraries(' + params.projectName + '\n')
-        for feat in params.features:
-            if (feat in features_list):
-                file.write("        " + features_list[feat][LIB_NAME] + '\n')
-        file.write('        )\n\n')
+        # Selected libraries/features
+        if (params.features):
+            file.write('# Add any user requested libraries\n')
+            file.write('target_link_libraries(' + params.projectName + '\n')
+            for feat in params.features:
+                if (feat in features_list):
+                    file.write("        " + features_list[feat][LIB_NAME] + '\n')
+            file.write('        )\n\n')
 
-    file.write('pico_add_extra_outputs(' + params.projectName + ')\n\n')
-
-    file.close()
+        file.write('pico_add_extra_outputs(' + params.projectName + ')\n\n')
 
 
 # Generates the requested project files, if any
@@ -1078,21 +1075,17 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
             os.chdir(VSCODE_FOLDER)
 
             filename = VSCODE_LAUNCH_FILENAME
-            file = open(filename, 'w')
-            file.write(v1)
-            file.close()
+            with open(filename, 'w') as file:
+                file.write(v1)
 
-            file = open(VSCODE_C_PROPERTIES_FILENAME, 'w')
-            file.write(c1)
-            file.close()
+            with open(VSCODE_C_PROPERTIES_FILENAME, 'w') as file:
+                file.write(c1)
 
-            file = open(VSCODE_SETTINGS_FILENAME, 'w')
-            file.write(s1)
-            file.close()
+            with open(VSCODE_SETTINGS_FILENAME, 'w') as file:
+                file.write(s1)
 
-            file = open(VSCODE_EXTENSIONS_FILENAME, 'w')
-            file.write(e1)
-            file.close()
+            with open(VSCODE_EXTENSIONS_FILENAME, 'w') as file:
+                file.write(e1)
 
         else :
             print('Unknown project type requested')
