@@ -7,19 +7,18 @@
 #
 
 import argparse
+import csv
 import os
-import shutil
-from pathlib import Path
-import sys
-import subprocess
-from time import sleep
 import platform
 import shlex
-import csv
+import shutil
+import subprocess
+import sys
+from pathlib import Path
 
 import tkinter as tk
-from tkinter import messagebox as mb
 from tkinter import filedialog as fd
+from tkinter import messagebox as mb
 from tkinter import simpledialog as sd
 from tkinter import ttk
 
