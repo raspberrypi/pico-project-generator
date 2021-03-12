@@ -1014,10 +1014,10 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '      "servertype": "openocd",\n'
                   '      "gdbPath": "gdb-multiarch",\n'
                   '      "device": "RP2040",\n'
-                  '      "configFiles": [\n' + \
-                  '        "interface/' + deb + '",\n' + \
-                  '        "target/rp2040.cfg"\n' + \
-                  '        ],\n' + \
+                  '      "configFiles": [\n' +
+                  '        "interface/' + deb + '",\n' +
+                  '        "target/rp2040.cfg"\n' +
+                  '        ],\n' +
                   '      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",\n'
                   '      "runToMain": true,\n'
                   '      // Give restart the same functionality as runToMain\n'
