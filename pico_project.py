@@ -205,7 +205,7 @@ isMac = False
 isWindows = False
 
 
-class Parameters():
+class Parameters:
     def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects,
                  configs, runFromRAM, examples, uart, usb, cpp, debugger, exceptions, rtti):
         self.sdkPath = sdkPath
@@ -506,9 +506,9 @@ class ConfigurationWindow(tk.Toplevel):
             box.yview(*args)
 
     def mousewheel(self, event):
-        if (event.num == 4):  # Linux encodes wheel as 'buttons' 4 and 5
+        if event.num == 4:  # Linux encodes wheel as 'buttons' 4 and 5
             delta = -1
-        elif (event.num == 5):
+        elif event.num == 5:
             delta = 1
         else:  # Windows & OSX
             delta = event.delta
@@ -563,9 +563,9 @@ class ConfigurationWindow(tk.Toplevel):
         # Get the associated dict entry from our list of configs
         for conf in configuration_dictionary:
             if conf['name'] == config:
-                if (conf['type'] == 'bool'):
+                if conf['type'] == 'bool':
                     result = EditBoolWindow(self, conf, self.valuelist.get(index)).get()
-                elif (conf['type'] == 'int' or conf['type'] == ""):  # "" defaults to int
+                elif conf['type'] == 'int' or conf['type'] == "":  # "" defaults to int
                     result = EditIntWindow(self, conf, self.valuelist.get(index)).get()
                 elif conf['type'] == 'enum':
                     result = EditEnumWindow(self, conf, self.valuelist.get(index)).get()
@@ -753,7 +753,7 @@ class ProjectWindow(tk.Frame):
         projectPath = self.locationName.get()
         features = self.GetFeatures()
         projects = list()
-        if (self.wantVSCode.get()):
+        if self.wantVSCode.get():
             projects.append("vscode")
 
         p = Parameters(sdkPath=self.sdkpath, projectRoot=Path(projectPath), projectName=self.projectName.get(),
@@ -793,13 +793,13 @@ def CheckSDKPath(gui):
 
     if sdkPath == None:
         m = 'Unable to locate the Raspberry Pi Pico SDK, PICO_SDK_PATH is not set'
-        if (gui):
+        if gui:
             RunWarning(m)
         else:
             print(m)
     elif not os.path.isdir(sdkPath):
         m = 'Unable to locate the Raspberry Pi Pico SDK, PICO_SDK_PATH does not point to a directory'
-        if (gui):
+        if gui:
             RunWarning(m)
         else:
             print(m)
@@ -846,14 +846,14 @@ def GenerateMain(folder, projectName, features, cpp):
                 )
         file.write(main)
 
-        if (features):
+        if features:
 
             # Add any includes
             for feat in features:
-                if (feat in features_list):
+                if feat in features_list:
                     o = '#include "' + features_list[feat][H_FILE] + '"\n'
                     file.write(o)
-                if (feat in stdlib_examples_list):
+                if feat in stdlib_examples_list:
                     o = '#include "' + stdlib_examples_list[feat][H_FILE] + '"\n'
                     file.write(o)
 
@@ -861,7 +861,7 @@ def GenerateMain(folder, projectName, features, cpp):
 
             # Add any defines
             for feat in features:
-                if (feat in code_fragments_per_feature):
+                if feat in code_fragments_per_feature:
                     for s in code_fragments_per_feature[feat][DEFINES]:
                         file.write(s)
                         file.write('\n')
@@ -873,11 +873,11 @@ def GenerateMain(folder, projectName, features, cpp):
                 '    stdio_init_all();\n\n'
                 )
 
-        if (features):
+        if features:
             # Add any initialisers
             indent = 4
             for feat in features:
-                if (feat in code_fragments_per_feature):
+                if feat in code_fragments_per_feature:
                     for s in code_fragments_per_feature[feat][INITIALISERS]:
                         main += (" " * indent)
                         main += s
@@ -977,11 +977,11 @@ def GenerateCMake(folder, params):
         file.write('target_link_libraries(' + params.projectName + ' ' + STANDARD_LIBRARIES + ')\n\n')
 
         # Selected libraries/features
-        if (params.features):
+        if params.features:
             file.write('# Add any user requested libraries\n')
             file.write('target_link_libraries(' + params.projectName + '\n')
             for feat in params.features:
-                if (feat in features_list):
+                if feat in features_list:
                     file.write("        " + features_list[feat][LIB_NAME] + '\n')
             file.write('        )\n\n')
 
@@ -1220,7 +1220,7 @@ if c == None:
     m += 'You will need to install an appropriate compiler to build a Raspberry Pi Pico project\n'
     m += 'See the Raspberry Pi Pico documentation for how to do this on your particular platform\n'
 
-    if (args.gui):
+    if args.gui:
         RunWarning(m)
     else:
         print(m)
