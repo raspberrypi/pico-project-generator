@@ -894,7 +894,13 @@ def GenerateCMake(folder, params):
                 )
 
     cmake_header2 = ("# Pull in Raspberry Pi Pico SDK (must be before project)\n"
-                "include(pico_sdk_import.cmake)\n\n"
+                "include(pico_sdk_import.cmake)\n"
+                "find_program(ELF2UF2_BIN ELF2UF2)\n"
+                "if(ELF2UF2_BIN)\n"
+                "  message(\"ELF2UF2 will not be built\")\n"
+                "  message(STATUS \"using: ${ELF2UF2_BIN}\")\n"
+                "  set(ELF2UF2_FOUND 1)\n"
+                "endif()\n\n"
                 )
 
     cmake_header3 = (
