@@ -1,6 +1,6 @@
 # pico-project-generator
 
-This is a command line or GUI tool, written in Python, to automatically generate a Raspberry Pi Pico C SDK Project.
+This is a command line or GUI tool, written in Python, to automatically generate a Raspberry Pi Pico C/C++ SDK Project.
 
 The tool will generate all required CMake files, program files and VSCode IDE files for the set of features requested.
 
@@ -79,7 +79,7 @@ Debugger | Use the specified debugger in the IDE
 
 This application can **optionally** be installed to your system using standard Python installation tools. If you would like to do so, follow the instructions below. If you do not wish to install the application, you can run it from the the pico_project directory.
 
-Clone the repository with: `$ git clone https://github.com/raspberrypi/pico-project-generator` (assuming you are using HTTP to clone repositories). Change to the repository's directory with: `$ cd pico-project-generator`.
+Clone the repository with: `$ git clone https://github.com/raspberrypi/pico-project-generator`. Change to the repository's directory with: `$ cd pico-project-generator`.
 
 The package can then be installed for the current user using: `$ pip install .`, or for all users using `$ sudo pip install .`.
 

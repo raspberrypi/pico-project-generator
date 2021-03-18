@@ -797,9 +797,13 @@ def CheckSDKPath(gui):
 
 
 def ParseCommandLine():
+    # default tsv file location is in this python module's directory 
+    this_module_location = os.path.dirname(os.path.realpath(__file__))
+    default_tsv_file = os.path.join(this_module_location, "pico_configs.tsv")
+
     parser = argparse.ArgumentParser(description='Pico Project generator')
     parser.add_argument("name", nargs="?", help="Name of the project")
-    parser.add_argument("-t", "--tsv", help="Select an alternative pico_configs.tsv file", default="pico_configs.tsv")
+    parser.add_argument("-t", "--tsv", help="Select an alternative pico_configs.tsv file", default=default_tsv_file)
     parser.add_argument("-o", "--output", help="Set an alternative CMakeList.txt filename", default="CMakeLists.txt")
     parser.add_argument("-x", "--examples", action='store_true', help="Add example code for the Pico standard library")
     parser.add_argument("-l", "--list", action='store_true', help="List available features")
@@ -1101,9 +1105,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
 
 
 def LoadConfigurations():
-    # open the pico_configs.tsv from the executable's directory
-    this_module_location = os.path.dirname(os.path.realpath(__file__))
-    tsv_file = os.path.join(this_module_location, "pico_configs.tsv")
+    print("tsv: ",args.tsv)
     try:
         with open(args.tsv) as tsvfile:
             reader = csv.DictReader(tsvfile, dialect='excel-tab')
@@ -1205,6 +1207,7 @@ def DoEverything(parent, params):
 ###################################################################################
 # main execution starteth here
 def main():
+    global args
     args = ParseCommandLine()
 
     if args.nouart:
