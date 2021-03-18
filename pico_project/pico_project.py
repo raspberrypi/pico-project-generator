@@ -1105,7 +1105,6 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
 
 
 def LoadConfigurations():
-    print("tsv: ",args.tsv)
     try:
         with open(args.tsv) as tsvfile:
             reader = csv.DictReader(tsvfile, dialect='excel-tab')
