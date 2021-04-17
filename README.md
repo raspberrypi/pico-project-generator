@@ -6,6 +6,13 @@ The tool will generate all required CMake files, program files and VSCode IDE fi
 
 It will also add example code for any features and optionally for some standard library functions.
 
+## Installation
+
+To install this tool, execute the following commands (assuming `/usr/local/bin` is in your `PATH`):
+
+    sudo cp -a pico_project.py pico_configs.tsv logo_alpha.gif /usr/local/bin
+    sudo chown root:root  /usr/local/bin/{pico_project.py,pico_configs.tsv,logo_alpha.gif}
+
 ## Command line
 
 Running `./pico_project --help` will give a list of the available command line parameters
