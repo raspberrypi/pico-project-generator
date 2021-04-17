@@ -797,9 +797,10 @@ def CheckSDKPath(gui):
 
 
 def ParseCommandLine():
+    default_tsv = os.path.join(os.path.dirname(__file__), "pico_configs.tsv")
     parser = argparse.ArgumentParser(description='Pico Project generator')
     parser.add_argument("name", nargs="?", help="Name of the project")
-    parser.add_argument("-t", "--tsv", help="Select an alternative pico_configs.tsv file", default="pico_configs.tsv")
+    parser.add_argument("-t", "--tsv", help="Select an alternative pico_configs.tsv file", default=default_tsv)
     parser.add_argument("-o", "--output", help="Set an alternative CMakeList.txt filename", default="CMakeLists.txt")
     parser.add_argument("-x", "--examples", action='store_true', help="Add example code for the Pico standard library")
     parser.add_argument("-l", "--list", action='store_true', help="List available features")
