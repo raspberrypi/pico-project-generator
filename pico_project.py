@@ -27,6 +27,7 @@ CMAKELIST_FILENAME='CMakeLists.txt'
 COMPILER_NAME='arm-none-eabi-gcc'
 
 VSCODE_LAUNCH_FILENAME = 'launch.json'
+VSCODE_TASKS_FILENAME = 'tasks.json'
 VSCODE_C_PROPERTIES_FILENAME = 'c_cpp_properties.json'
 VSCODE_SETTINGS_FILENAME ='settings.json'
 VSCODE_EXTENSIONS_FILENAME ='extensions.json'
@@ -1027,6 +1028,40 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '  ]\n'
                   '}\n')
 
+            t1 = ('{\n'
+                  '  // See https://go.microsoft.com/fwlink/?LinkId=733558\n'
+                  '  // for the documentation about the tasks.json format\n'
+                  '  "version": "2.0.0",\n'
+                  '  "tasks": [\n'
+                  '     {\n'
+                  '         "label": "Copy to Pico",\n'
+                  '         "type": "process",\n'
+                  '         "problemMatcher": [],\n'
+                  '         "options": {\n'
+                  '             "cwd": "${workspaceFolder}"\n'
+                  '         },\n'
+                  '         "command": "openocd",\n'
+                  '         "args": [\n'
+                  '             "-f",\n'
+                  '             "interface/raspberrypi-swd.cfg",\n'
+                  '             "-f",\n'
+                  '             "target/rp2040.cfg",\n'
+                  '             "-c",\n'
+                  '             "program ${command:cmake.launchTargetPath} verify reset exit"\n'
+                  '         ],\n'
+                  '         "group": "none",\n'
+                  '         "presentation": {\n'
+                  '             "echo": true,\n'
+                  '             "reveal": "always",\n'
+                  '             "focus": false,\n'
+                  '             "panel": "shared",\n'
+                  '             "showReuseMessage": false,\n'
+                  '             "clear": false\n'
+                  '         },\n'
+                  '     }\n'
+                  ' ]\n'
+                  '}\n')
+
             c1 = ('{\n'
                   '  "configurations": [\n'
                   '    {\n'
@@ -1075,6 +1110,11 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
             filename = VSCODE_LAUNCH_FILENAME
             file = open(filename, 'w')
             file.write(v1)
+            file.close()
+
+            filename = VSCODE_TASKS_FILENAME
+            file = open(filename, 'w')
+            file.write(t1)
             file.close()
 
             file = open(VSCODE_C_PROPERTIES_FILENAME, 'w')
