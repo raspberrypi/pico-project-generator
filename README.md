@@ -84,10 +84,7 @@ Create VSCode Project | As well as the CMake files, also create the appropriate 
 Debugger | Use the specified debugger in the IDE
 
 
+## Tasks
 
-
-
-
-
-
-
+This command will also generate the file `.vscode/tasks.json` with (currently) a single task called `Copy to Pico`. If you run this task, it will compile, link and
+copy (upload) the code to the Pico. The extension called `Tasks` from the marketplace (author actboy168, note that there are other, similarly named extensions, so take care)  will add a button to the action-bar at the bottom of VSCode, so compiling and uploading is only a mouse-click away.
