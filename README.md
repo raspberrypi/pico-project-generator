@@ -72,7 +72,6 @@ Overwrite Project | If a project already exists in the specified folder, overwri
 
 IDE Options | Description
 ------------| -----------
-
 Create VSCode Project | As well as the CMake files, also create the appropriate Visual Studio Code project files.
 Debugger | Use the specified debugger in the IDE
 
