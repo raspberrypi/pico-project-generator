@@ -47,7 +47,7 @@ be added to the project using the `--feature` options, this can be used multiple
 
 ## GUI version
 
-The GUI version of the tool, run by adding `--gui` to the command line, uses `tkinter` to provide a platform agnostic script that will run on Linux, Mac and Windows. All the options from the command line tool are also supported in the GUI.
+The GUI version of the tool, run by adding `--gui` to the command line, uses `tkinter` to provide a platform agnostic script that will run on Linux, Mac and Windows. All the options from the command line tool are also supported in the GUI. It may be necessary to install the `python3-tk` package for GUI support on Ubuntu/Debian platforms.
 
 You can add specific features to your project by selecting them from the check boxes on the GUI. This will ensure the build system adds the appropriate code to the build, and also adds simple example code to the project showing how to use the feature. There are a number of options available, which provide the following functionality.
 
