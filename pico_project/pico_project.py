@@ -797,9 +797,13 @@ def CheckSDKPath(gui):
 
 
 def ParseCommandLine():
+    # default tsv file location is in this python module's directory 
+    this_module_location = os.path.dirname(os.path.realpath(__file__))
+    default_tsv_file = os.path.join(this_module_location, "pico_configs.tsv")
+
     parser = argparse.ArgumentParser(description='Pico Project generator')
     parser.add_argument("name", nargs="?", help="Name of the project")
-    parser.add_argument("-t", "--tsv", help="Select an alternative pico_configs.tsv file", default="pico_configs.tsv")
+    parser.add_argument("-t", "--tsv", help="Select an alternative pico_configs.tsv file", default=default_tsv_file)
     parser.add_argument("-o", "--output", help="Set an alternative CMakeList.txt filename", default="CMakeLists.txt")
     parser.add_argument("-x", "--examples", action='store_true', help="Add example code for the Pico standard library")
     parser.add_argument("-l", "--list", action='store_true', help="List available features")
@@ -1201,70 +1205,75 @@ def DoEverything(parent, params):
 
 ###################################################################################
 # main execution starteth here
+def main():
+    global args
+    args = ParseCommandLine()
 
-args = ParseCommandLine()
-
-if args.nouart:
-    args.uart = False
+    if args.nouart:
+        args.uart = False
 
 #  TODO this could be better, need some constants etc
-if args.debugger > 1:
-    args.debugger = 0
+    if args.debugger > 1:
+        args.debugger = 0
 
 # Check we have everything we need to compile etc
-c = CheckPrerequisites()
+    c = CheckPrerequisites()
 
 ## TODO Do both warnings in the same error message so user does have to keep coming back to find still more to do
 
-if c == None:
-    m = 'Unable to find the `' + COMPILER_NAME + '` compiler\n'
-    m +='You will need to install an appropriate compiler to build a Raspberry Pi Pico project\n'
-    m += 'See the Raspberry Pi Pico documentation for how to do this on your particular platform\n'
+    if c == None:
+        m = 'Unable to find the `' + COMPILER_NAME + '` compiler\n'
+        m +='You will need to install an appropriate compiler to build a Raspberry Pi Pico project\n'
+        m += 'See the Raspberry Pi Pico documentation for how to do this on your particular platform\n'
 
-    if (args.gui):
-        RunWarning(m)
-    else:
-        print(m)
-    sys.exit(-1)
+        if (args.gui):
+            RunWarning(m)
+        else:
+            print(m)
+        sys.exit(-1)
 
-if args.name == None and not args.gui and not args.list and not args.configs:
-    print("No project name specfied\n")
-    sys.exit(-1)
+    if args.name == None and not args.gui and not args.list and not args.configs:
+        print("No project name specfied\n")
+        sys.exit(-1)
 
 # load/parse any configuration dictionary we may have
-LoadConfigurations()
+    LoadConfigurations()
 
-p = CheckSDKPath(args.gui)
+    p = CheckSDKPath(args.gui)
 
-if p == None:
-    sys.exit(-1)
+    if p == None:
+        sys.exit(-1)
 
-sdkPath = Path(p)
+    sdkPath = Path(p)
 
-if args.gui:
-    RunGUI(sdkPath, args) # does not return, only exits
+    if args.gui:
+        RunGUI(sdkPath, args) # does not return, only exits
 
-projectRoot = Path(os.getcwd())
+    projectRoot = Path(os.getcwd())
 
-if args.list or args.configs:
-    if args.list:
-        print("Available project features:\n")
-        for feat in features_list:
-            print(feat.ljust(6), '\t', features_list[feat][GUI_TEXT])
-        print('\n')
+    if args.list or args.configs:
+        if args.list:
+            print("Available project features:\n")
+            for feat in features_list:
+                print(feat.ljust(6), '\t', features_list[feat][GUI_TEXT])
+            print('\n')
 
-    if args.configs:
-        print("Available project configuration items:\n")
-        for conf in configuration_dictionary:
-            print(conf['name'].ljust(40), '\t', conf['description'])
-        print('\n')
+        if args.configs:
+            print("Available project configuration items:\n")
+            for conf in configuration_dictionary:
+                print(conf['name'].ljust(40), '\t', conf['description'])
+            print('\n')
 
-    sys.exit(0)
-else :
-    p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
-                   gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
-                   projects=args.project, configs=(), runFromRAM=args.runFromRAM,
-                   examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, debugger=args.debugger, exceptions=args.cppexceptions, rtti=args.cpprtti)
+        sys.exit(0)
+    else :
+        p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
+                    gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
+                    projects=args.project, configs=(), runFromRAM=args.runFromRAM,
+                    examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, debugger=args.debugger, exceptions=args.cppexceptions, rtti=args.cpprtti)
 
-    DoEverything(None, p)
+        DoEverything(None, p)
+
+
+if __name__ == "__main__":
+    main()
 
