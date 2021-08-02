@@ -6,6 +6,20 @@ The tool will generate all required CMake files, program files and VSCode IDE fi
 
 It will also add example code for any features and optionally for some standard library functions.
 
+## Installation
+
+This script depends on Jinja for templating. You can install this external library globally:
+
+`python3 -m pip install -r requirements.txt`
+
+or in a virtual environment:
+
+1. `python3 -m venv .venv`
+2. `source .venv/bin/activate` or `.venv\Scripts\activate.bat` on Windows
+3. `pip install -r requirements.txt`
+
+See [the official Python docs](https://docs.python.org/3/library/venv.html) for more information on virtual environments.
+
 ## Command line
 
 Running `./pico_project --help` will give a list of the available command line parameters
