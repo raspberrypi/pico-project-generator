@@ -1,0 +1,16 @@
+#include <stdio.h>
+#include "pico/stdlib.h"
+$extra_includes
+
+$extra_defines
+
+
+int main() {
+    stdio_init_all();
+
+    $extra_feats
+
+    puts("Hello, world!");
+
+    return 0;
+}
