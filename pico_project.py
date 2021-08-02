@@ -12,7 +12,6 @@ import shutil
 from pathlib import Path
 import sys
 import subprocess
-from time import sleep
 import platform
 import shlex
 import csv
