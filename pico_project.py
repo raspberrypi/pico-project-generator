@@ -436,8 +436,8 @@ class ConfigurationWindow(tk.Toplevel):
     def init_window(self, args):
         self.configure(background=GetBackground())
         self.title("Advanced Configuration")
-        ttk.Label(self, text="Select the advanced options you wish to enable or change. \
-            Note that you really should understand the implications of changing these items before using them!").grid(row=0, column=0, columnspan=5)
+        ttk.Label(self, text="Select the advanced options you wish to enable or change. Note that you really should understand the implications of changing these items before using them!") \
+            .grid(row=0, column=0, columnspan=5)
         ttk.Label(self, text="Name").grid(row=1, column=0, sticky=tk.W)
         ttk.Label(self, text="Type").grid(row=1, column=1, sticky=tk.W)
         ttk.Label(self, text="Min").grid(row=1, column=2, sticky=tk.W)
