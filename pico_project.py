@@ -54,17 +54,19 @@ jinja_env.trim_blocks = True
 jinja_env.lstrip_blocks = True
 jinja_env.keep_trailing_newline = True
 
-# Additional Jinja filters
+# Additional Jinja filters (can be refactored)
 @pass_context
-def jinja_to_define(context, peripheral_name, *args, **kwargs):
-    return context.vars[f'{peripheral_name}_define'](*args, **kwargs)
+def jinja_find_define(context, peripheral_name, *args, **kwargs):
+    func = getattr(context.vars['fragments'], f'{peripheral_name}_define')
+    return func(*args, **kwargs)
 
 @pass_context
-def jinja_to_initialiser(context, peripheral_name, *args, **kwargs):
-    return context.vars[f'{peripheral_name}_initialiser'](*args, **kwargs)
+def jinja_find_initialiser(context, peripheral_name, *args, **kwargs):
+    func = getattr(context.vars['fragments'], f'{peripheral_name}_initialiser')
+    return func(*args, **kwargs)
 
-jinja_env.filters['to_define'] = jinja_to_define
-
+jinja_env.filters['find_define'] = jinja_find_define
+jinja_env.filters['find_initialiser'] = jinja_find_initialiser
 
 features_list = {
     'spi' :     ("SPI",             "spi.c",            "hardware/spi.h",       "hardware_spi"),
@@ -73,7 +75,7 @@ features_list = {
     'pio' :     ("PIO interface",   "pio.c",            "hardware/pio.h",       "hardware_pio"),
     'interp' :  ("HW interpolation", "interp.c",        "hardware/interp.h",    "hardware_interp"),
     'timer' :   ("HW timer",        "timer.c",          "hardware/timer.h",     "hardware_timer"),
-    'watch' :   ("HW watchdog",     "watch.c",          "hardware/watchdog.h",  "hardware_watchdog"),
+    'watchdog' :   ("HW watchdog",     "watch.c",          "hardware/watchdog.h",  "hardware_watchdog"),
     'clocks' :  ("HW clocks",       "clocks.c",         "hardware/clocks.h",    "hardware_clocks"),
 }
 
@@ -85,11 +87,6 @@ stdlib_examples_list = {
 
 debugger_list = ["SWD", "PicoProbe"]
 debugger_config_list = ["raspberrypi-swd.cfg", "picoprobe.cfg"]
-
-DEFINES = 0
-INITIALISERS = 1
-# Could add an extra item that shows how to use some of the available functions for the feature
-#EXAMPLE = 2
 
 configuration_dictionary = list(dict())
 
@@ -727,23 +724,8 @@ def GenerateMain(folder, projectName, features, cpp):
                 includes.append(f'#include "{stdlib_examples_list[feat][H_FILE]}"')
         mapping['includes'] = includes
 
-        # Add any defines
-        defines = []
-        for feat in features:
-            if (feat in code_fragments_per_feature):
-                for s in code_fragments_per_feature[feat][DEFINES]:
-                    defines.append(s)
-        mapping['defines'] = defines
-
-    if (features):
-        # Add any initialisers
-        indent = 4
-        initialisers = []
-        for feat in features:
-            if (feat in code_fragments_per_feature):
-                for s in code_fragments_per_feature[feat][INITIALISERS]:
-                    initialisers.append(f'{" " * indent}{s}')
-        mapping['initialisers'] = initialisers
+        # Add library names so we can lookup any defines or initialisers
+        mapping['libraries'] = features
 
     if cpp:
         filename = Path(folder) / (projectName + '.cpp')

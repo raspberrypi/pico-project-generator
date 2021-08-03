@@ -73,9 +73,7 @@ gpio_set_dir(GPIO, GPIO_IN);
 gpio_pull_up(GPIO);
 {% endmacro %}
 
-{% macro interp_define() %}
-
-{% endmacro %}
+{% macro interp_define() %}{% endmacro %}
 
 {% macro interp_initialiser() %}
 // Interpolator example code
@@ -100,7 +98,6 @@ add_alarm_in_ms(2000, alarm_callback, NULL, false);
 {% endmacro %}
 
 {% macro watchdog_define() %}
-
 {% endmacro %}
 
 {% macro watchdog_initialiser() %}
@@ -116,7 +113,6 @@ watchdog_update();
 {% endmacro %}
 
 {% macro div_define() %}
-
 {% endmacro %}
 
 {% macro div_initialiser() %}
@@ -135,3 +131,15 @@ int32_t udivisor = 321;
 divmod_result_t uresult = hw_divider_divmod_u32(udividend, udivisor);
 printf(\%d/%d = %d remainder %d\\n\, udividend, udivisor, to_quotient_u32(uresult), to_remainder_u32(uresult));
 {% endmacro %}
+
+{% macro dma_define() %}{% endmacro %}
+
+{% macro dma_initialiser() %}{% endmacro %}
+
+{% macro pio_define() %}{% endmacro %}
+
+{% macro pio_initialiser() %}{% endmacro %}
+
+{% macro clocks_define() %}{% endmacro %}
+
+{% macro clocks_initialiser() %}{% endmacro %}
