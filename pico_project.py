@@ -767,9 +767,9 @@ def GenerateMain(folder, projectName, features, cpp):
         includes = []
         for feat in features:
             if (feat in features_list):
-                includes.append(f'#include "{features_list[feat][H_FILE]}"')
-            if (feat in stdlib_examples_list):
-                includes.append(f'#include "{stdlib_examples_list[feat][H_FILE]}"')
+                includes.append(features_list[feat][H_FILE])
+            elif (feat in stdlib_examples_list):
+                includes.append(stdlib_examples_list[feat][H_FILE])
         mapping['includes'] = includes
 
         # Add library names so we can lookup any defines or initialisers

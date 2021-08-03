@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 {% for include in includes %}
-{{include}}
+#include "{{include}}"
 {% endfor %}
 
 {% for lib in libraries %}
