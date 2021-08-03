@@ -2,7 +2,7 @@ name: Run tests
 on: [push, pull_request]
 
 jobs:
-  tests:
+  pytest:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout pico-sdk/develop
@@ -18,8 +18,20 @@ jobs:
     - name: Install toolchain dependencies
       run:  sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib
 
-    - name: Hello
-      run: pwd && echo $SHELL 
+    - name: Checkout pico-project-generator
+      uses: actions/checkout@v2
+      with:
+        path: pico-project-generator
+
+    - name: Install project generator dependencies
+      run: cd pico-project-generator && python3 -m pip install -r requirements.txt
+
+    - name: Install project generator test dependencies
+      run: python3 -m pip install pytest
+
+    - name: Run pytest
+      run: cd pico-project-generator && pytest
+
     # - name: Configure CMake
     #   # Use a bash shell so we can use the same syntax for environment variable
     #   # access regardless of the host operating system
@@ -30,10 +42,7 @@ jobs:
     #   # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
     #   run: PICO_SDK_PATH=../../pico-sdk cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
-    # - name: Checkout pico-project-generator
-    #   uses: actions/checkout@v2
-    #   with:
-    #     path: pico-project-generator
+
 
     # - name: Build
     #   working-directory: ${{github.workspace}}/pico-examples/build
