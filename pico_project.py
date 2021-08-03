@@ -760,7 +760,7 @@ def ParseCommandLine():
 def GenerateMain(folder, projectName, features, cpp):
 
     template = jinja_env.get_template('main.txt')
-    mapping = dict(includes="", defines="", initialisers="")
+    mapping = dict(includes=[], libraries=[])
 
     if (features):
         # Add any includes
