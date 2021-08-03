@@ -75,11 +75,7 @@ IDE Options | Description
 Create VSCode Project | As well as the CMake files, also create the appropriate Visual Studio Code project files.
 Debugger | Use the specified debugger in the IDE
 
+## Development
 
-
-
-
-
-
-
-
+* use a virtual environment to ensure dependencies are isolated from your system's
+* additional dependencies: `pip install pytest`
