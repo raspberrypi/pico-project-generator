@@ -15,6 +15,7 @@ import csv
 
 BASE_PATH = Path(__file__).resolve().parent
 
+
 def load_configs(path):
     list_to_return = []
     try:
@@ -24,6 +25,7 @@ def load_configs(path):
                 list_to_return.append(row)
     except:
         print("No Pico configurations file found. Continuing without")
+
 
 def main():
     args = pico_cli.get_args()
@@ -59,6 +61,7 @@ def main():
         pico_gui.run(generator)
     else:
         pico_cli.run(generator)
+
 
 if __name__ == '__main__':
     main()
