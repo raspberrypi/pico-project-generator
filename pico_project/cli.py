@@ -9,9 +9,10 @@ cli -- configuration for the pico-project-generator command line interface
 """
 
 import argparse
+from picogenlib import PicoProjectFactory
 
 def get_args():
-    parser = argparse.ArgumentParser(description='Pico Project generator')
+    parser = argparse.ArgumentParser(description='Raspberry Pi Pico Project Generator')
     parser.add_argument("name", nargs="?", help="Name of the project")
     parser.add_argument("-t", "--tsv", help="Select an alternative pico_configs.tsv file", default="pico_configs.tsv")
     parser.add_argument("-o", "--output", help="Set an alternative CMakeList.txt filename", default="CMakeLists.txt")
@@ -35,5 +36,15 @@ def get_args():
                         default=0, help="Enable C++ exceptions (Uses more memory)")
     parser.add_argument("-d", "--debugger", type=int, help="Select debugger (0 = SWD, 1 = PicoProbe)", default=0)
 
-    return parser.parse_args()
+    return vars(parser.parse_args()).copy()
 
+def run(generator: PicoProjectFactory):
+    """
+    run function for the CLI frontend
+    """
+    generator.verify_build_system()
+    generator.setup_project()
+    generator.setup_build_system()
+    generator.generate_all()
+    generator.run_cmake()
+    return
