@@ -8,8 +8,9 @@
 
 import cli as pico_cli
 import gui as pico_gui
-from pathlib import Path
 from picogenlib import PicoProjectFactory, LibInfo
+
+from pathlib import Path
 import os
 import csv
 
@@ -37,7 +38,7 @@ def main():
     #  TODO this could be better, need some constants etc
     if args['debugger'] > 1:
         args['debugger'] = 0
-        
+
     # weeell...the user should technically be allowed to specify a path
     args['project_root'] = Path(os.getcwd())
     generator = PicoProjectFactory(BASE_PATH, args)
