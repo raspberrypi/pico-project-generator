@@ -19,11 +19,11 @@ BASE_PATH = Path(__file__).resolve().parent
 def load_configs(path):
     list_to_return = []
     try:
-        with open(path) as tsvfile:
+        with open(path, 'r') as tsvfile:
             reader = csv.DictReader(tsvfile, dialect='excel-tab')
             for row in reader:
                 list_to_return.append(row)
-    except:
+    except FileNotFoundError:
         print("No Pico configurations file found. Continuing without")
 
 
