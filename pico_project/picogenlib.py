@@ -51,6 +51,9 @@ class IDE(Enum):
 
 
 class LibInfo(Enum):
+    """
+    Enum to keep track of indices in constants.json
+    """
     GUI_TEXT = 0
     C_FILE = 1
     H_FILE = 2
@@ -114,11 +117,17 @@ class PicoProjectFactory():
 
     @staticmethod
     def get_constants(path):
+        """
+        Loads the constants file
+        """
         with open(path, 'r') as f:
             constants = json.loads(f.read())
         return constants
 
     def run_cmake(self, callable: Callable = None):
+        """
+        Runs "cmake" with platform-appropriate commands and flags
+        """
         is_windows = platform.system() == 'Windows'
         project_path = self.project_opts['project_path']
         if is_windows:
@@ -181,6 +190,9 @@ class PicoProjectFactory():
             f.write(template.render(mapping))
 
     def generate_cmake(self):
+        """
+        Generates the CMakeLists.txt file
+        """
         filename = self.project_opts['project_path'] / CMAKELIST_FILENAME
         template = self.jinja_env.get_template("cmake.txt")
 
@@ -212,6 +224,9 @@ class PicoProjectFactory():
             f.write(template.render(mapping))
 
     def generate_ide(self):
+        """
+        Generates IDE-related files
+        """
         args = []
 
         if self.ide_opts['name'] == IDE.VSCODE:
@@ -237,12 +252,18 @@ class PicoProjectFactory():
         self.generate_ide()
 
     def setup_project(self):
+        """
+        Pre-generation project scaffolding
+        """
         # create project dir
         project_path = self.project_opts['base_path'] / self.project_opts['name']
         project_path.mkdir(exist_ok=True)
         self.project_opts['project_path'] = project_path
 
     def setup_build_system(self):
+        """
+        Pre-generation build system scaffolding
+        """
         wants_overwrite = self.project_opts['wants_overwrite']
         cmake_exists = (self.project_opts['project_path'] / CMAKELIST_FILENAME).exists()
         if not wants_overwrite and cmake_exists:
@@ -258,6 +279,9 @@ class PicoProjectFactory():
         (project_path / 'build').mkdir(exist_ok=True)
 
     def verify_build_system(self):
+        """
+        Makes sure we have everything we need to just run "cmake"
+        """
         # check existence of compiler
         if not shutil.which(COMPILER_NAME):
             m = 'Unable to find the `' + COMPILER_NAME + '` compiler\n'
@@ -286,6 +310,9 @@ class PicoProjectFactory():
             self.send_error('Invalid project path. Select a valid path and try again')
 
     def send_error(self, msg):
+        """
+        Direct errors to GUI or CLI depending on frontend choice
+        """
         if self.parent_gui:
             self.parent_gui.RunWarning(msg)
         else:

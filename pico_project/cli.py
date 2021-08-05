@@ -47,4 +47,6 @@ def run(generator: PicoProjectFactory):
     generator.setup_build_system()
     generator.generate_all()
     generator.run_cmake()
+    if(generator.project_opts['wants_build']):
+        generator.run_make()
     return
