@@ -37,8 +37,12 @@ def main():
     #  TODO this could be better, need some constants etc
     if args['debugger'] > 1:
         args['debugger'] = 0
+        
+    # weeell...the user should technically be allowed to specify a path
+    args['project_root'] = Path(os.getcwd())
+    generator = PicoProjectFactory(BASE_PATH, args)
 
-    features_list = PicoProjectFactory.get_constants(BASE_PATH / 'constants.json')
+    features_list = generator.constants['features_list']
     # load/parse any configuration dictionary we may have
     configs = load_configs(args['tsv'])
 
@@ -54,9 +58,6 @@ def main():
             print(conf['name'].ljust(40), '\t', conf['description'])
         return
 
-    # weeell...the user should technically be allowed to specify a path
-    args['project_root'] = Path(os.getcwd())
-    generator = PicoProjectFactory(BASE_PATH, args)
     if args['gui']:
         pico_gui.run(generator)
     else:
