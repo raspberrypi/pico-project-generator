@@ -22,10 +22,10 @@ See [the official Python docs](https://docs.python.org/3/library/venv.html) for 
 
 ## Command line
 
-Running `./pico_project --help` will give a list of the available command line parameters
+Running `python3 pico_project --help` will give a list of the available command line parameters
 
 ```
-usage: pico_project.py [-h] [-t TSV] [-o OUTPUT] [-x] [-l] [-c] [-f FEATURE] [-over] [-b] [-g] [-p PROJECT] [-r] [-uart] [-usb] [name]
+usage: pico_project [-h] [-t TSV] [-o OUTPUT] [-x] [-l] [-c] [-f FEATURE] [-over] [-b] [-g] [-p PROJECT] [-r] [-uart] [-usb] [name]
 
 Pico Project generator
 
@@ -54,7 +54,7 @@ optional arguments:
    cpp, --cpp           Generate C++ code
   -d DEBUGGER, --debugger DEBUGGER   Select debugger (0 = SWD, 1 = PicoProbe)
 ```
-You can list the features supported by the tools by using `./pico_project --list`. These features can
+You can list the features supported by the tools by using `python3 pico_project --list`. These features can
 be added to the project using the `--feature` options, this can be used multiple times.
 
 
