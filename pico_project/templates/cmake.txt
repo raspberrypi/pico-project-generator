@@ -31,19 +31,19 @@ add_compile_definitions({{c}}={{ 1 if v else 0}})
 pico_sdk_init()
 
 # add executable. Default name is the project name
-{% set extension = ".cpp" if want_cpp else ".c" %}
+{% set extension = ".cpp" if wants_cpp else ".c" %}
 add_executable({{project_name}} {{project_name}}{{extension}})
 
 pico_set_program_name({{ project_name }} "{{ project_name}}")
 pico_set_program_version({{project_name}} "0.1")
 
-{% if want_run_from_ram %}
+{% if wants_run_from_ram %}
 # no_flash means the target is to run from RAM
 pico_set_binary_type({{project_name}} no_flash)
 {% endif %}
 # control the console output destinations
-pico_enable_stdio_uart({{project_name}} {{1 if want_uart else 0}})
-pico_enable_stdio_usb({{project_name}} {{1 if want_usb else 0}})
+pico_enable_stdio_uart({{project_name}} {{1 if wants_uart else 0}})
+pico_enable_stdio_usb({{project_name}} {{1 if wants_usb else 0}})
 
 # pull in common dependencies {% if features | length  %}and additional hardware support{% endif %} 
 target_link_libraries({{project_name}}
