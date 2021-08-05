@@ -74,7 +74,8 @@ class PicoProjectFactory():
             "wants_cpp": kwargs['cpp'],
             "exceptions": kwargs['cppexceptions'],
             "configs": kwargs['configs'],
-            "rtti": kwargs['cpprtti']
+            "rtti": kwargs['cpprtti'],
+            "configs": kwargs['configs']
         }
         # options pertaining to the Pico code
         self.code_opts = {
@@ -100,6 +101,7 @@ class PicoProjectFactory():
         self.constants = self.get_constants(base_path / 'constants.json')
 
         self.parent_gui = has_gui
+        self.base_path = base_path
 
     def _get_jinja_env(self, templates_path):
         """
@@ -136,26 +138,23 @@ class PicoProjectFactory():
             cmake_cmd = f'cmake -DCMAKE_BUILD_TYPE=Debug -S {project_path} -B {project_path / "build"}'
 
         if callable:
-            callable(cmake_cmd.split())
+            callable(cmake_cmd)
         else:
             subprocess.run(cmake_cmd.split(), shell=is_windows)
 
     def run_make(self, callable: Callable):
-        old_dir = os.getcwd()
-        os.chdir(self.project_opts['project_path'])
+        project_path = self.project_opts['project_path']
         is_windows = platform.system() == 'Windows'
         cpus = os.cpu_count() or 1
         if is_windows:
-            makeCmd = 'nmake -j ' + str(cpus)
+            make_cmd = f'nmake -C {project_path} -j ' + str(cpus)
         else:
-            makeCmd = 'make -j ' + str(cpus)
+            make_cmd = f'make -C {project_path} -j ' + str(cpus)
 
         if callable:
-            callable(makeCmd)
+            callable(make_cmd)
         else:
-            subprocess.Popen(makeCmd.split(), shell=True).wait()
-
-        os.chdir(old_dir)
+            subprocess.run(make_cmd.split(), shell=is_windows)
 
     def generate_main(self):
         """

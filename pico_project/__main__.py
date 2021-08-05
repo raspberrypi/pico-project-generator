@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import argparse
 import cli as pico_cli
 import gui as pico_gui
 from picogenlib import PicoProjectFactory, LibInfo
@@ -39,13 +40,14 @@ def main():
     if args['debugger'] > 1:
         args['debugger'] = 0
 
+    configs = load_configs(args['tsv'])
+    args['configs'] = configs
     # weeell...the user should technically be allowed to specify a path
     args['project_root'] = Path(os.getcwd())
     generator = PicoProjectFactory(BASE_PATH, args)
 
     features_list = generator.constants['features_list']
     # load/parse any configuration dictionary we may have
-    configs = load_configs(args['tsv'])
 
     if args['list']:
         print("Available project features:\n")

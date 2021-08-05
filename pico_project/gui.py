@@ -8,12 +8,19 @@
 gui -- setup for the pico-project-generator graphical user interface
 """
 
+from picogenlib import PicoProjectFactory, LibInfo, IDE
 import tkinter as tk
 from tkinter import messagebox as mb
 from tkinter import filedialog as fd
 from tkinter import simpledialog as sd
 from tkinter import ttk
+import sys
+import shlex
+import subprocess
+import threading
+from pathlib import Path
 
+CONFIG_UNSET = "Not set"
 
 def GetBackground():
     return 'white'
@@ -31,7 +38,10 @@ def GetButtonTextColour():
     return '#c51a4a'
 
 
-def RunGUI(sdkpath, args):
+def run(generator: PicoProjectFactory):
+    """
+    run function for the GUI frontend
+    """
     root = tk.Tk()
     style = ttk.Style(root)
     style.theme_use('default')
@@ -46,7 +56,7 @@ def RunGUI(sdkpath, args):
     ttk.Style().configure("TCombobox", foreground=GetTextColour(), background=GetBackground())
     ttk.Style().configure("TListbox", foreground=GetTextColour(), background=GetBackground())
 
-    app = ProjectWindow(root, sdkpath, args)
+    app = ProjectWindow(root, generator)
 
     app.configure(background=GetBackground())
 
@@ -54,8 +64,8 @@ def RunGUI(sdkpath, args):
     sys.exit(0)
 
 
-def RunWarning(message):
-    mb.showwarning('Raspberry Pi Pico Project Generator', message)
+def RunWarning(msg):
+    mb.showwarning('Raspberry Pi Pico Project Generator', msg)
     sys.exit(0)
 
 
@@ -85,6 +95,7 @@ class ChecklistBox(tk.Frame):
 
 
 def thread_function(text, command, ok):
+    print(command)
     l = shlex.split(command)
     proc = subprocess.Popen(l, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(proc.stdout.readline, ''):
@@ -273,7 +284,7 @@ class ConfigurationWindow(tk.Toplevel):
         okButton.grid(column=5, row=3, padx=5)
 
         # populate the list box with our config options
-        for conf in configuration_dictionary:
+        for conf in self.genera:
             self.namelist.insert(tk.END, conf['name'])
             s = conf['type']
             if s == "":
@@ -313,7 +324,7 @@ class ConfigurationWindow(tk.Toplevel):
             index = int(sellist[0])
             config = self.namelist.get(index)
             # Now find the description for that config in the dictionary
-            for conf in configuration_dictionary:
+            for conf in self.results:
                 if conf['name'] == config:
                     self.descriptionText.config(state=tk.NORMAL)
                     self.descriptionText.delete(1.0, tk.END)
@@ -349,7 +360,7 @@ class ConfigurationWindow(tk.Toplevel):
         index = int(box.curselection()[0])
         config = self.namelist.get(index)
         # Get the associated dict entry from our list of configs
-        for conf in configuration_dictionary:
+        for conf in self.results:
             if conf['name'] == config:
                 if (conf['type'] == 'bool'):
                     result = EditBoolWindow(self, conf, self.valuelist.get(index)).get()
@@ -385,14 +396,14 @@ class ConfigurationWindow(tk.Toplevel):
 # Our main window
 class ProjectWindow(tk.Frame):
 
-    def __init__(self, parent, sdkpath, args):
+    def __init__(self, parent, generator):
         tk.Frame.__init__(self, parent)
         self.master = parent
-        self.sdkpath = sdkpath
-        self.init_window(args)
-        self.configs = dict()
+        self.generator = generator
+        self.init_window()
+        self.configs = {}
 
-    def init_window(self, args):
+    def init_window(self):
         self.master.title("Raspberry Pi Pico Project Generator")
         self.master.configure(bg=GetBackground())
 
@@ -407,16 +418,14 @@ class ProjectWindow(tk.Frame):
         namelbl = ttk.Label(mainFrame, text='Project Name :').grid(row=2, column=0, sticky=tk.E)
         self.projectName = tk.StringVar()
 
-        if args.name != None:
-            self.projectName.set(args.name)
-        else:
-            self.projectName.set('ProjectName')
+        generator = self.generator
+        self.projectName.set(generator.project_opts['name'] or 'ProjectName')
 
         nameEntry = ttk.Entry(mainFrame, textvariable=self.projectName).grid(row=2, column=1, sticky=tk.W+tk.E, padx=5)
 
         locationlbl = ttk.Label(mainFrame, text='Location :').grid(row=3, column=0, sticky=tk.E)
         self.locationName = tk.StringVar()
-        self.locationName.set(os.getcwd())
+        self.locationName.set(generator.project_opts['base_path'])
         locationEntry = ttk.Entry(
             mainFrame, textvariable=self.locationName).grid(
             row=3, column=1, columnspan=3, sticky=tk.W + tk.E, padx=5)
@@ -427,9 +436,10 @@ class ProjectWindow(tk.Frame):
         featuresframe.grid(row=4, column=0, columnspan=5, rowspan=5, ipadx=5, padx=5, sticky=tk.E+tk.W)
 
         # Add features to the list
+        features_list = generator.constants['features_list']
         v = []
         for i in features_list:
-            v.append(features_list[i][GUI_TEXT])
+            v.append(features_list[i][LibInfo.GUI_TEXT.value])
 
         s = (len(v)//3) + 1
 
@@ -448,13 +458,13 @@ class ProjectWindow(tk.Frame):
                               padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantUART = tk.IntVar()
-        self.wantUART.set(args.uart)
+        self.wantUART.set(generator.build_opts['wants_uart'])
         ttk.Checkbutton(
             ooptionsSubframe, text="Console over UART", variable=self.wantUART).grid(
             row=0, column=0, padx=4, sticky=tk.W)
 
         self.wantUSB = tk.IntVar()
-        self.wantUSB.set(args.usb)
+        self.wantUSB.set(generator.build_opts['wants_usb'])
         ttk.Checkbutton(ooptionsSubframe, text="Console over USB (Disables other USB use)",
                         variable=self.wantUSB).grid(row=0, column=1, padx=4, sticky=tk.W)
 
@@ -466,30 +476,30 @@ class ProjectWindow(tk.Frame):
                               padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantExamples = tk.IntVar()
-        self.wantExamples.set(args.examples)
+        self.wantExamples.set(generator.code_opts['wants_examples'])
         ttk.Checkbutton(coptionsSubframe, text="Add examples for Pico library",
                         variable=self.wantExamples).grid(row=0, column=0, padx=4, sticky=tk.W)
 
         self.wantRunFromRAM = tk.IntVar()
-        self.wantRunFromRAM.set(args.runFromRAM)
+        self.wantRunFromRAM.set(generator.build_opts['wants_run_from_ram'])
         ttk.Checkbutton(
             coptionsSubframe, text="Run from RAM", variable=self.wantRunFromRAM).grid(
             row=0, column=1, padx=4, sticky=tk.W)
 
         self.wantCPP = tk.IntVar()
-        self.wantCPP.set(args.cpp)
+        self.wantCPP.set(generator.build_opts['wants_cpp'])
         ttk.Checkbutton(coptionsSubframe, text="Generate C++",
                         variable=self.wantCPP).grid(row=0, column=3, padx=4, sticky=tk.W)
 
         ttk.Button(coptionsSubframe, text="Advanced...", command=self.config).grid(row=0, column=4, sticky=tk.E)
 
         self.wantCPPExceptions = tk.IntVar()
-        self.wantCPPExceptions.set(args.cppexceptions)
+        self.wantCPPExceptions.set(generator.build_opts['exceptions'])
         ttk.Checkbutton(coptionsSubframe, text="Enable C++ exceptions",
                         variable=self.wantCPPExceptions).grid(row=1, column=0, padx=4, sticky=tk.W)
 
         self.wantCPPRTTI = tk.IntVar()
-        self.wantCPPRTTI.set(args.cpprtti)
+        self.wantCPPRTTI.set(generator.build_opts['rtti'])
         ttk.Checkbutton(coptionsSubframe, text="Enable C++ RTTI",
                         variable=self.wantCPPRTTI).grid(row=1, column=1, padx=4, sticky=tk.W)
 
@@ -502,12 +512,12 @@ class ProjectWindow(tk.Frame):
                               padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantBuild = tk.IntVar()
-        self.wantBuild.set(args.build)
+        self.wantBuild.set(generator.project_opts['wants_build'])
         ttk.Checkbutton(boptionsSubframe, text="Run build after generation",
                         variable=self.wantBuild).grid(row=0, column=0, padx=4, sticky=tk.W)
 
         self.wantOverwrite = tk.IntVar()
-        self.wantOverwrite.set(args.overwrite)
+        self.wantOverwrite.set(generator.project_opts['wants_overwrite'])
         ttk.Checkbutton(boptionsSubframe, text="Overwrite project if it already exists",
                         variable=self.wantOverwrite).grid(row=0, column=1, padx=4, sticky=tk.W)
 
@@ -523,9 +533,9 @@ class ProjectWindow(tk.Frame):
 
         ttk.Label(vscodeoptionsSubframe, text="     Debugger:").grid(row=0, column=1, padx=4, sticky=tk.W)
 
-        self.debugger = ttk.Combobox(vscodeoptionsSubframe, values=debugger_list, state="readonly")
+        self.debugger = ttk.Combobox(vscodeoptionsSubframe, values=generator.constants['debugger_list'], state="readonly")
         self.debugger.grid(row=0, column=2, padx=4, sticky=tk.W)
-        self.debugger.current(args.debugger)
+        self.debugger.current(generator.ide_opts['debugger'])
 
         optionsRow += 2
 
@@ -549,8 +559,9 @@ class ProjectWindow(tk.Frame):
         f += self.featuresEntry1.getCheckedItems()
         f += self.featuresEntry2.getCheckedItems()
 
+        features_list = self.generator.constants['features_list']
         for feat in features_list:
-            if features_list[feat][GUI_TEXT] in f:
+            if features_list[feat][LibInfo.GUI_TEXT.value] in f:
                 features.append(feat)
 
         return features
@@ -560,28 +571,42 @@ class ProjectWindow(tk.Frame):
         sys.exit(0)
 
     def OK(self):
-        # OK, grab all the settings from the page, then call the generators
-        projectPath = self.locationName.get()
+        # user pressed OK, let's go!
+        generator = self.generator
+        generator.has_gui = mb
+        
+        generator.project_opts['name'] = self.projectName.get()
+        generator.project_opts['wants_overwrite'] = self.wantOverwrite.get()
+        generator.project_opts['wants_build'] = self.wantBuild.get()
+        generator.build_opts['wants_run_from_ram'] = self.wantRunFromRAM.get()
+        generator.code_opts['wants_examples'] = self.wantExamples.get()
+        generator.build_opts['wants_uart'] = self.wantUART.get()
+        generator.build_opts['wants_usb'] = self.wantUSB.get()
+        generator.build_opts['wants_cpp'] = self.wantCPP.get()
+        generator.ide_opts['debugger'] = self.debugger.current()
+        generator.build_opts['exceptions'] = self.wantCPPExceptions.get()
+        generator.build_opts['rtti'] = self.wantCPPRTTI.get()
+
+        generator.verify_build_system()
+        generator.setup_project()
+        generator.setup_build_system()
+
+        project_path = self.locationName.get()
+        generator.project_opts['base_path'] = Path(project_path)
+
         features = self.GetFeatures()
-        projects = list()
-        if (self.wantVSCode.get()):
-            projects.append("vscode")
+        generator.code_opts['features'] = features
+        if self.wantVSCode.get():
+            generator.ide_opts['name'] = IDE.VSCODE.value
 
-        p = Parameters(
-            sdkPath=self.sdkpath, projectRoot=Path(projectPath),
-            projectName=self.projectName.get(),
-            gui=True, overwrite=self.wantOverwrite.get(),
-            build=self.wantBuild.get(),
-            features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
-            examples=self.wantExamples.get(),
-            uart=self.wantUART.get(),
-            usb=self.wantUSB.get(),
-            cpp=self.wantCPP.get(),
-            debugger=self.debugger.current(),
-            exceptions=self.wantCPPExceptions.get(),
-            rtti=self.wantCPPRTTI.get())
+        # this closure is a bit of a hack
+        def picogenlib_run_cmd(cmd):
+            RunCommandInWindow(self, cmd)
 
-        DoEverything(self, p)
+        generator.generate_all()
+        generator.run_cmake(picogenlib_run_cmd)
+        if generator.project_opts['wants_build']:
+            generator.run_make(picogenlib_run_cmd)
 
     def browse(self):
         name = fd.askdirectory()
@@ -592,7 +617,7 @@ class ProjectWindow(tk.Frame):
 
     def config(self):
         # Run the configuration window
-        self.configs = ConfigurationWindow(self, self.configs).get()
+        self.generator.project_opts['configs'] = ConfigurationWindow(self, self.generator.project_opts['configs']).get()
 
     def _get_filepath(self, filename):
-        return os.path.join(os.path.dirname(__file__), filename)
+        return self.generator.base_path.parent / filename
