@@ -1,0 +1,80 @@
+{
+    "features_list": {
+        "spi": [
+            "SPI",
+            "spi.c",
+            "hardware/spi.h",
+            "hardware_spi"
+        ],
+        "i2c": [
+            "I2C interface",
+            "i2c.c",
+            "hardware/i2c.h",
+            "hardware_i2c"
+        ],
+        "dma": [
+            "DMA support",
+            "dma.c",
+            "hardware/dma.h",
+            "hardware_dma"
+        ],
+        "pio": [
+            "PIO interface",
+            "pio.c",
+            "hardware/pio.h",
+            "hardware_pio"
+        ],
+        "interp": [
+            "HW interpolation",
+            "interp.c",
+            "hardware/interp.h",
+            "hardware_interp"
+        ],
+        "timer": [
+            "HW timer",
+            "timer.c",
+            "hardware/timer.h",
+            "hardware_timer"
+        ],
+        "watchdog": [
+            "HW watchdog",
+            "watch.c",
+            "hardware/watchdog.h",
+            "hardware_watchdog"
+        ],
+        "clocks": [
+            "HW clocks",
+            "clocks.c",
+            "hardware/clocks.h",
+            "hardware_clocks"
+        ]
+    },
+    "stdlib_examples_list": {
+        "uart": [
+            "UART",
+            "uart.c",
+            "hardware/uart.h",
+            "hardware_uart"
+        ],
+        "gpio": [
+            "GPIO interface",
+            "gpio.c",
+            "hardware/gpio.h",
+            "hardware_gpio"
+        ],
+        "div": [
+            "Low level HW Divider",
+            "divider.c",
+            "hardware/divider.h",
+            "hardware_divider"
+        ]
+    },
+    "debugger_list": [
+        "SWD",
+        "PicoProbe"
+    ],
+    "debugger_config_list": [
+        "raspberrypi-swd.cfg",
+        "picoprobe.cfg"
+    ]
+}
