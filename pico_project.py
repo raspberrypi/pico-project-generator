@@ -369,9 +369,10 @@ class ConfigurationWindow(tk.Toplevel):
             box.grid(row=2, column=i, padx=0, sticky=tk.W + tk.E)
             i += 1
 
-        self.descriptionText.grid(row=3, column=0, columnspan=4, sticky=tk.W + tk.E)
-        cancelButton.grid(column=4, row=3, sticky=tk.E, padx=5)
-        okButton.grid(column=5, row=3, padx=5)
+        self.descriptionText.grid(row = 3, column=0, columnspan=4, sticky=tk.W + tk.E)
+        cancelButton.grid(column=5, row = 3, padx=5)
+        okButton.grid(column=4, row = 3, sticky=tk.E, padx=5)
+
 
         # populate the list box with our config options
         for conf in configuration_dictionary:
@@ -632,11 +633,10 @@ class ProjectWindow(tk.Frame):
 
         # OK, Cancel, Help section
         # creating buttons
-        QuitButton = ttk.Button(
-            mainFrame, text="Quit", command=self.quit).grid(
-            row=optionsRow, column=3, padx=4, pady=5, sticky=tk.E)
-        OKButton = ttk.Button(mainFrame, text="OK", command=self.OK).grid(
-            row=optionsRow, column=4, stick=tk.E, padx=10, pady=5)
+
+        QuitButton = ttk.Button(mainFrame, text="Quit", command=self.quit).grid(row=optionsRow, column=4, stick=tk.E, padx=10, pady=5)
+        OKButton = ttk.Button(mainFrame, text="OK", command=self.OK).grid(row=optionsRow, column=3, padx=4, pady=5, sticky=tk.E)
+
         # TODO help not implemented yet
         # HelpButton = ttk.Button(mainFrame, text="Help", command=self.help).grid(row=optionsRow, column=0, pady=5)
 
