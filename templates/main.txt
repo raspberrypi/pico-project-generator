@@ -1,0 +1,24 @@
+{% import "fragments.txt" as fragments %}
+#include <stdio.h>
+#include "pico/stdlib.h"
+{% for include in includes %}
+#include "{{include}}"
+{% endfor %}
+
+{% for lib in libraries %}
+{% set def = lib | find_define %}
+{% if def | length %}
+{{ def }}
+{% endif %}
+{% endfor %}
+int main() {
+    stdio_init_all();
+    {% for lib in libraries %}
+    {% set ini = lib | find_initialiser %}
+    {% if ini | length %}
+    {{ ini | indent }}
+    {% endif %}
+    {% endfor %}
+    puts("Hello, world!");
+    return 0;
+}
