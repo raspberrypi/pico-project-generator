@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import threading
 import argparse
 import os
 import shutil
@@ -16,7 +15,6 @@ import subprocess
 import platform
 import shlex
 import csv
-from jinja2 import Environment, FileSystemLoader, pass_context
 
 import tkinter as tk
 from tkinter import messagebox as mb
@@ -24,16 +22,20 @@ from tkinter import filedialog as fd
 from tkinter import simpledialog as sd
 from tkinter import ttk
 
-CMAKELIST_FILENAME = 'CMakeLists.txt'
-COMPILER_NAME = 'arm-none-eabi-gcc'
+CMAKELIST_FILENAME='CMakeLists.txt'
+COMPILER_NAME='arm-none-eabi-gcc'
 
 VSCODE_LAUNCH_FILENAME = 'launch.json'
 VSCODE_C_PROPERTIES_FILENAME = 'c_cpp_properties.json'
-VSCODE_SETTINGS_FILENAME = 'settings.json'
-VSCODE_EXTENSIONS_FILENAME = 'extensions.json'
-VSCODE_FOLDER = '.vscode'
+VSCODE_SETTINGS_FILENAME ='settings.json'
+VSCODE_EXTENSIONS_FILENAME ='extensions.json'
+VSCODE_FOLDER='.vscode'
 
-CONFIG_UNSET = "Not set"
+CONFIG_UNSET="Not set"
+
+# Standard libraries for all builds
+# And any more to string below, space separator
+STANDARD_LIBRARIES = 'pico_stdlib'
 
 # Indexed on feature name, tuple contains the C file, the H file and the Cmake project name for the feature
 GUI_TEXT = 0
@@ -41,58 +43,166 @@ C_FILE = 1
 H_FILE = 2
 LIB_NAME = 3
 
-BASE_DIR = Path(__file__).resolve().parent
-TEMPLATES_DIR = BASE_DIR / 'templates'
-
-# Configure Jinja for templating
-jinja_env = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
-jinja_env.trim_blocks = True
-jinja_env.lstrip_blocks = True
-jinja_env.keep_trailing_newline = True
-
-# Additional Jinja filters (can be refactored)
-
-
-@pass_context
-def jinja_find_define(context, peripheral_name, *args, **kwargs):
-    func = getattr(context.vars['fragments'], f'{peripheral_name}_define')
-    return func(*args, **kwargs)
-
-
-@pass_context
-def jinja_find_initialiser(context, peripheral_name, *args, **kwargs):
-    func = getattr(context.vars['fragments'], f'{peripheral_name}_initialiser')
-    return func(*args, **kwargs)
-
-
-jinja_env.filters['find_define'] = jinja_find_define
-jinja_env.filters['find_initialiser'] = jinja_find_initialiser
-
 features_list = {
-    'spi':     ("SPI",             "spi.c",            "hardware/spi.h",       "hardware_spi"),
-    'i2c':     ("I2C interface",   "i2c.c",            "hardware/i2c.h",       "hardware_i2c"),
-    'dma':     ("DMA support",     "dma.c",            "hardware/dma.h",       "hardware_dma"),
-    'pio':     ("PIO interface",   "pio.c",            "hardware/pio.h",       "hardware_pio"),
-    'interp':  ("HW interpolation", "interp.c",        "hardware/interp.h",    "hardware_interp"),
-    'timer':   ("HW timer",        "timer.c",          "hardware/timer.h",     "hardware_timer"),
-    'watchdog':   ("HW watchdog",     "watch.c",          "hardware/watchdog.h",  "hardware_watchdog"),
-    'clocks':  ("HW clocks",       "clocks.c",         "hardware/clocks.h",    "hardware_clocks"),
+    'spi' :     ("SPI",             "spi.c",            "hardware/spi.h",       "hardware_spi"),
+    'i2c' :     ("I2C interface",   "i2c.c",            "hardware/i2c.h",       "hardware_i2c"),
+    'dma' :     ("DMA support",     "dma.c",            "hardware/dma.h",       "hardware_dma"),
+    'pio' :     ("PIO interface",   "pio.c",            "hardware/pio.h",       "hardware_pio"),
+    'interp' :  ("HW interpolation", "interp.c",        "hardware/interp.h",    "hardware_interp"),
+    'timer' :   ("HW timer",        "timer.c",          "hardware/timer.h",     "hardware_timer"),
+    'watch' :   ("HW watchdog",     "watch.c",          "hardware/watchdog.h",  "hardware_watchdog"),
+    'clocks' :  ("HW clocks",       "clocks.c",         "hardware/clocks.h",    "hardware_clocks"),
 }
 
 stdlib_examples_list = {
     'uart':     ("UART",                    "uart.c",           "hardware/uart.h",      "hardware_uart"),
-    'gpio':    ("GPIO interface",          "gpio.c",           "hardware/gpio.h",      "hardware_gpio"),
-    'div':     ("Low level HW Divider",    "divider.c",  "hardware/divider.h",   "hardware_divider")
+    'gpio' :    ("GPIO interface",          "gpio.c",           "hardware/gpio.h",      "hardware_gpio"),
+    'div' :     ("Low level HW Divider",    "divider.c",  "hardware/divider.h",   "hardware_divider")
 }
 
 debugger_list = ["SWD", "PicoProbe"]
 debugger_config_list = ["raspberrypi-swd.cfg", "picoprobe.cfg"]
 
+DEFINES = 0
+INITIALISERS = 1
+# Could add an extra item that shows how to use some of the available functions for the feature
+#EXAMPLE = 2
+
+# This also contains example code for the standard library (see stdlib_examples_list)
+code_fragments_per_feature = {
+    'uart' : [
+               ("// UART defines",
+                "// By default the stdout UART is `uart0`, so we will use the second one",
+                "#define UART_ID uart1",
+                "#define BAUD_RATE 9600", "",
+                "// Use pins 4 and 5 for UART1",
+                "// Pins can be changed, see the GPIO function select table in the datasheet for information on GPIO assignments",
+                "#define UART_TX_PIN 4",
+                "#define UART_RX_PIN 5" ),
+
+               ( "// Set up our UART",
+                 "uart_init(UART_ID, BAUD_RATE);",
+                 "// Set the TX and RX pins by using the function select on the GPIO",
+                 "// Set datasheet for more information on function select",
+                 "gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);",
+                 "gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);", "" )
+            ],
+    'spi' : [
+              ( "// SPI Defines",
+                "// We are going to use SPI 0, and allocate it to the following GPIO pins",
+                "// Pins can be changed, see the GPIO function select table in the datasheet for information on GPIO assignments",
+                "#define SPI_PORT spi0",
+                "#define PIN_MISO 16",
+                "#define PIN_CS   17",
+                "#define PIN_SCK  18",
+                "#define PIN_MOSI 19" ),
+
+              ( "// SPI initialisation. This example will use SPI at 1MHz.",
+                "spi_init(SPI_PORT, 1000*1000);",
+                "gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);",
+                "gpio_set_function(PIN_CS,   GPIO_FUNC_SIO);",
+                "gpio_set_function(PIN_SCK,  GPIO_FUNC_SPI);",
+                "gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);", "",
+                "// Chip select is active-low, so we'll initialise it to a driven-high state",
+                "gpio_set_dir(PIN_CS, GPIO_OUT);",
+                "gpio_put(PIN_CS, 1);", "")
+            ],
+    'i2c' : [
+              (
+                "// I2C defines",
+                "// This example will use I2C0 on GPIO8 (SDA) and GPIO9 (SCL) running at 400KHz.",
+                "// Pins can be changed, see the GPIO function select table in the datasheet for information on GPIO assignments",
+                "#define I2C_PORT i2c0",
+                "#define I2C_SDA 8",
+                "#define I2C_SCL 9",
+              ),
+              (
+                "// I2C Initialisation. Using it at 400Khz.",
+                "i2c_init(I2C_PORT, 400*1000);","",
+                "gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);",
+                "gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);",
+                "gpio_pull_up(I2C_SDA);",
+                "gpio_pull_up(I2C_SCL);"
+              )
+            ],
+    "gpio" : [
+              (
+                "// GPIO defines",
+                "// Example uses GPIO 2",
+                "#define GPIO 2"
+              ),
+              (
+                "// GPIO initialisation.",
+                "// We will make this GPIO an input, and pull it up by default",
+                "gpio_init(GPIO);",
+                "gpio_set_dir(GPIO, GPIO_IN);",
+                "gpio_pull_up(GPIO);","",
+              )
+            ],
+    "interp" :[
+               (),
+               (
+                "// Interpolator example code",
+                "interp_config cfg = interp_default_config();",
+                "// Now use the various interpolator library functions for your use case",
+                "// e.g. interp_config_clamp(&cfg, true);",
+                "//      interp_config_shift(&cfg, 2);",
+                "// Then set the config ",
+                "interp_set_config(interp0, 0, &cfg);",
+               )
+              ],
+
+    "timer"  : [
+                (
+                 "int64_t alarm_callback(alarm_id_t id, void *user_data) {",
+                 "    // Put your timeout handler code in here",
+                 "    return 0;",
+                 "}"
+                ),
+                (
+                 "// Timer example code - This example fires off the callback after 2000ms",
+                 "add_alarm_in_ms(2000, alarm_callback, NULL, false);"
+                )
+              ],
+
+    "watchdog":[ (),
+                (
+                    "// Watchdog example code",
+                    "if (watchdog_caused_reboot()) {",
+                    "    // Whatever action you may take if a watchdog caused a reboot",
+                    "}","",
+                    "// Enable the watchdog, requiring the watchdog to be updated every 100ms or the chip will reboot",
+                    "// second arg is pause on debug which means the watchdog will pause when stepping through code",
+                    "watchdog_enable(100, 1);","",
+                    "// You need to call this function at least more often than the 100ms in the enable call to prevent a reboot"
+                    "watchdog_update();",
+                )
+              ],
+
+    "div"    : [ (),
+                 (
+                    "// Example of using the HW divider. The pico_divider library provides a more user friendly set of APIs ",
+                    "// over the divider (and support for 64 bit divides), and of course by default regular C language integer",
+                    "// divisions are redirected thru that library, meaning you can just use C level `/` and `%` operators and",
+                    "// gain the benefits of the fast hardware divider.",
+                    "int32_t dividend = 123456;",
+                    "int32_t divisor = -321;",
+                    "// This is the recommended signed fast divider for general use.",
+                    "divmod_result_t result = hw_divider_divmod_s32(dividend, divisor);",
+                    "printf(\"%d/%d = %d remainder %d\\n\", dividend, divisor, to_quotient_s32(result), to_remainder_s32(result));",
+                    "// This is the recommended unsigned fast divider for general use.",
+                    "int32_t udividend = 123456;",
+                    "int32_t udivisor = 321;",
+                    "divmod_result_t uresult = hw_divider_divmod_u32(udividend, udivisor);",
+                    "printf(\"%d/%d = %d remainder %d\\n\", udividend, udivisor, to_quotient_u32(uresult), to_remainder_u32(uresult));"
+                 )
+                ]
+}
+
 configuration_dictionary = list(dict())
 
 isMac = False
 isWindows = False
-
 
 class Parameters():
     def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects,
@@ -115,37 +225,31 @@ class Parameters():
         self.exceptions = exceptions
         self.rtti = rtti
 
-
 def GetBackground():
     return 'white'
-
 
 def GetButtonBackground():
     return 'white'
 
-
 def GetTextColour():
     return 'black'
 
-
 def GetButtonTextColour():
     return '#c51a4a'
-
 
 def RunGUI(sdkpath, args):
     root = tk.Tk()
     style = ttk.Style(root)
     style.theme_use('default')
 
-    ttk.Style().configure("TButton", padding=6, relief="groove", border=2,
-                          foreground=GetButtonTextColour(), background=GetButtonBackground())
-    ttk.Style().configure("TLabel", foreground=GetTextColour(), background=GetBackground())
-    ttk.Style().configure("TCheckbutton", foreground=GetTextColour(), background=GetBackground())
-    ttk.Style().configure("TRadiobutton", foreground=GetTextColour(), background=GetBackground())
-    ttk.Style().configure("TLabelframe", foreground=GetTextColour(), background=GetBackground())
-    ttk.Style().configure("TLabelframe.Label", foreground=GetTextColour(), background=GetBackground())
-    ttk.Style().configure("TCombobox", foreground=GetTextColour(), background=GetBackground())
-    ttk.Style().configure("TListbox", foreground=GetTextColour(), background=GetBackground())
+    ttk.Style().configure("TButton", padding=6, relief="groove", border=2, foreground=GetButtonTextColour(), background=GetButtonBackground())
+    ttk.Style().configure("TLabel", foreground=GetTextColour(), background=GetBackground() )
+    ttk.Style().configure("TCheckbutton", foreground=GetTextColour(), background=GetBackground() )
+    ttk.Style().configure("TRadiobutton", foreground=GetTextColour(), background=GetBackground() )
+    ttk.Style().configure("TLabelframe", foreground=GetTextColour(), background=GetBackground() )
+    ttk.Style().configure("TLabelframe.Label", foreground=GetTextColour(), background=GetBackground() )
+    ttk.Style().configure("TCombobox", foreground=GetTextColour(), background=GetBackground() )
+    ttk.Style().configure("TListbox", foreground=GetTextColour(), background=GetBackground() )
 
     app = ProjectWindow(root, sdkpath, args)
 
@@ -153,7 +257,6 @@ def RunGUI(sdkpath, args):
 
     root.mainloop()
     sys.exit(0)
-
 
 def RunWarning(message):
     mb.showwarning('Raspberry Pi Pico Project Generator', message)
@@ -169,26 +272,28 @@ class ChecklistBox(tk.Frame):
             # This var will be automatically updated by the checkbox
             # The checkbox fills the var with the "onvalue" and "offvalue" as
             # it is clicked on and off
-            var = tk.StringVar(value='')  # Off by default for the moment
+            var = tk.StringVar(value='') # Off by default for the moment
             self.vars.append(var)
             cb = ttk.Checkbutton(self, var=var, text=c,
-                                 onvalue=c, offvalue="",
-                                 width=20)
+                                onvalue=c, offvalue="",
+                                width=20)
             cb.pack(side="top", fill="x", anchor="w")
 
     def getCheckedItems(self):
         values = []
         for var in self.vars:
-            value = var.get()
+            value =  var.get()
             if value:
                 values.append(value)
         return values
 
 
+import threading
+
 def thread_function(text, command, ok):
     l = shlex.split(command)
     proc = subprocess.Popen(l, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    for line in iter(proc.stdout.readline, ''):
+    for line in iter(proc.stdout.readline,''):
         if not line:
             if ok:
                 ok["state"] = tk.NORMAL
@@ -197,8 +302,6 @@ def thread_function(text, command, ok):
         text.see(tk.END)
 
 # Function to run an OS command and display the output in a new modal window
-
-
 class DisplayWindow(tk.Toplevel):
     def __init__(self, parent, title):
         tk.Toplevel.__init__(self, parent)
@@ -231,13 +334,11 @@ class DisplayWindow(tk.Toplevel):
     def OK(self):
         self.destroy()
 
-
 def RunCommandInWindow(parent, command):
     w = DisplayWindow(parent, command)
     x = threading.Thread(target=thread_function, args=(w.text, command, w.OKButton))
     x.start()
     parent.wait_window(w)
-
 
 class EditBoolWindow(sd.Dialog):
 
@@ -246,6 +347,7 @@ class EditBoolWindow(sd.Dialog):
         self.config_item = configitem
         self.current = current
         sd.Dialog.__init__(self, parent, "Edit boolean configuration")
+
 
     def body(self, master):
         self.configure(background=GetBackground())
@@ -259,7 +361,6 @@ class EditBoolWindow(sd.Dialog):
     def get(self):
         return self.result.get()
 
-
 class EditIntWindow(sd.Dialog):
 
     def __init__(self, parent, configitem, current):
@@ -272,7 +373,7 @@ class EditIntWindow(sd.Dialog):
         self.configure(background=GetBackground())
         str = self.config_item['name'] + "  Max = " + self.config_item['max'] + "  Min = " + self.config_item['min']
         ttk.Label(self, text=str).pack()
-        self.input = tk.Entry(self)
+        self.input =  tk.Entry(self)
         self.input.pack(pady=4)
         self.input.insert(0, self.current)
         ttk.Button(self, text=CONFIG_UNSET, command=self.unset).pack(pady=5)
@@ -289,7 +390,6 @@ class EditIntWindow(sd.Dialog):
     def get(self):
         return self.result
 
-
 class EditEnumWindow(sd.Dialog):
     def __init__(self, parent, configitem, current):
         self.parent = parent
@@ -298,10 +398,10 @@ class EditEnumWindow(sd.Dialog):
         sd.Dialog.__init__(self, parent, "Edit Enumeration configuration")
 
     def body(self, master):
-        # self.configure(background=GetBackground())
+        #self.configure(background=GetBackground())
         values = self.config_item['enumvalues'].split('|')
-        values.insert(0, 'Not set')
-        self.input = ttk.Combobox(self, values=values, state='readonly')
+        values.insert(0,'Not set')
+        self.input =  ttk.Combobox(self, values=values, state='readonly')
         self.input.set(self.current)
         self.input.pack(pady=12)
 
@@ -324,8 +424,7 @@ class ConfigurationWindow(tk.Toplevel):
     def init_window(self, args):
         self.configure(background=GetBackground())
         self.title("Advanced Configuration")
-        ttk.Label(self, text="Select the advanced options you wish to enable or change. Note that you really should understand the implications of changing these items before using them!").grid(
-            row=0, column=0, columnspan=5)
+        ttk.Label(self, text="Select the advanced options you wish to enable or change. Note that you really should understand the implications of changing these items before using them!").grid(row=0, column=0, columnspan=5)
         ttk.Label(self, text="Name").grid(row=1, column=0, sticky=tk.W)
         ttk.Label(self, text="Type").grid(row=1, column=1, sticky=tk.W)
         ttk.Label(self, text="Min").grid(row=1, column=2, sticky=tk.W)
@@ -345,7 +444,7 @@ class ConfigurationWindow(tk.Toplevel):
 
         self.descriptionText = tk.Text(self, state=tk.DISABLED, height=2)
 
-        # Make a list of our list boxes to make it all easier to handle
+        ## Make a list of our list boxes to make it all easier to handle
         self.listlist = [self.namelist, self.typelist, self.minlist, self.maxlist, self.defaultlist, self.valuelist]
 
         scroll = tk.Scrollbar(self, orient=tk.VERTICAL, command=self.yview)
@@ -367,12 +466,11 @@ class ConfigurationWindow(tk.Toplevel):
         i = 0
         for box in self.listlist:
             box.grid(row=2, column=i, padx=0, sticky=tk.W + tk.E)
-            i += 1
+            i+=1
 
         self.descriptionText.grid(row = 3, column=0, columnspan=4, sticky=tk.W + tk.E)
         cancelButton.grid(column=5, row = 3, padx=5)
         okButton.grid(column=4, row = 3, sticky=tk.E, padx=5)
-
 
         # populate the list box with our config options
         for conf in configuration_dictionary:
@@ -389,7 +487,7 @@ class ConfigurationWindow(tk.Toplevel):
             val = self.results.get(conf['name'], CONFIG_UNSET)
             self.valuelist.insert(tk.END, val)
             if val != CONFIG_UNSET:
-                self.valuelist.itemconfig(self.valuelist.size() - 1, {'bg': 'green'})
+                self.valuelist.itemconfig(self.valuelist.size() - 1, {'bg':'green'})
 
     def yview(self, *args):
         for box in self.listlist:
@@ -418,7 +516,7 @@ class ConfigurationWindow(tk.Toplevel):
             for conf in configuration_dictionary:
                 if conf['name'] == config:
                     self.descriptionText.config(state=tk.NORMAL)
-                    self.descriptionText.delete(1.0, tk.END)
+                    self.descriptionText.delete(1.0,tk.END)
                     str = config + "\n" + conf['description']
                     self.descriptionText.insert(1.0, str)
                     self.descriptionText.config(state=tk.DISABLED)
@@ -442,9 +540,9 @@ class ConfigurationWindow(tk.Toplevel):
 
             if 0 <= index < box.size():
                 for b in self.listlist:
-                    b.selection_clear(0, tk.END)
-                    b.selection_set(index)
-                    b.see(index)
+                        b.selection_clear(0, tk.END)
+                        b.selection_set(index)
+                        b.see(index)
 
     def doubleClick(self, evt):
         box = evt.widget
@@ -455,7 +553,7 @@ class ConfigurationWindow(tk.Toplevel):
             if conf['name'] == config:
                 if (conf['type'] == 'bool'):
                     result = EditBoolWindow(self, conf, self.valuelist.get(index)).get()
-                elif (conf['type'] == 'int' or conf['type'] == ""):  # "" defaults to int
+                elif (conf['type'] == 'int' or conf['type'] == ""): # "" defaults to int
                     result = EditIntWindow(self, conf, self.valuelist.get(index)).get()
                 elif conf['type'] == 'enum':
                     result = EditEnumWindow(self, conf, self.valuelist.get(index)).get()
@@ -464,7 +562,7 @@ class ConfigurationWindow(tk.Toplevel):
                 self.valuelist.delete(index)
                 self.valuelist.insert(index, result)
                 if result != CONFIG_UNSET:
-                    self.valuelist.itemconfig(index, {'bg': 'green'})
+                    self.valuelist.itemconfig(index, {'bg':'green'})
                 break
 
     def ok(self):
@@ -502,9 +600,7 @@ class ProjectWindow(tk.Frame):
 
         # Need to keep a reference to the image or it will not appear.
         self.logo = tk.PhotoImage(file=self._get_filepath("logo_alpha.gif"))
-        logowidget = ttk.Label(
-            mainFrame, image=self.logo, borderwidth=0, relief="solid").grid(
-            row=0, column=0, columnspan=5, pady=10)
+        logowidget = ttk.Label(mainFrame, image=self.logo, borderwidth=0, relief="solid").grid(row=0,column=0, columnspan=5, pady=10)
 
         namelbl = ttk.Label(mainFrame, text='Project Name :').grid(row=2, column=0, sticky=tk.E)
         self.projectName = tk.StringVar()
@@ -519,9 +615,7 @@ class ProjectWindow(tk.Frame):
         locationlbl = ttk.Label(mainFrame, text='Location :').grid(row=3, column=0, sticky=tk.E)
         self.locationName = tk.StringVar()
         self.locationName.set(os.getcwd())
-        locationEntry = ttk.Entry(
-            mainFrame, textvariable=self.locationName).grid(
-            row=3, column=1, columnspan=3, sticky=tk.W + tk.E, padx=5)
+        locationEntry = ttk.Entry(mainFrame, textvariable=self.locationName).grid(row=3, column=1, columnspan=3, sticky=tk.W+tk.E, padx=5)
         locationBrowse = ttk.Button(mainFrame, text='Browse', command=self.browse).grid(row=3, column=4)
 
         # Features section
@@ -546,84 +640,68 @@ class ProjectWindow(tk.Frame):
 
         # output options section
         ooptionsSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="Console Options")
-        ooptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2,
-                              padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
+        ooptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantUART = tk.IntVar()
         self.wantUART.set(args.uart)
-        ttk.Checkbutton(
-            ooptionsSubframe, text="Console over UART", variable=self.wantUART).grid(
-            row=0, column=0, padx=4, sticky=tk.W)
+        ttk.Checkbutton(ooptionsSubframe, text="Console over UART", variable=self.wantUART).grid(row=0, column=0, padx=4, sticky=tk.W)
 
         self.wantUSB = tk.IntVar()
         self.wantUSB.set(args.usb)
-        ttk.Checkbutton(ooptionsSubframe, text="Console over USB (Disables other USB use)",
-                        variable=self.wantUSB).grid(row=0, column=1, padx=4, sticky=tk.W)
+        ttk.Checkbutton(ooptionsSubframe, text="Console over USB (Disables other USB use)", variable=self.wantUSB).grid(row=0, column=1, padx=4, sticky=tk.W)
 
         optionsRow += 2
 
         # Code options section
         coptionsSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="Code Options")
-        coptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=3,
-                              padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
+        coptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=3, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantExamples = tk.IntVar()
         self.wantExamples.set(args.examples)
-        ttk.Checkbutton(coptionsSubframe, text="Add examples for Pico library",
-                        variable=self.wantExamples).grid(row=0, column=0, padx=4, sticky=tk.W)
+        ttk.Checkbutton(coptionsSubframe, text="Add examples for Pico library", variable=self.wantExamples).grid(row=0, column=0, padx=4, sticky=tk.W)
 
         self.wantRunFromRAM = tk.IntVar()
         self.wantRunFromRAM.set(args.runFromRAM)
-        ttk.Checkbutton(
-            coptionsSubframe, text="Run from RAM", variable=self.wantRunFromRAM).grid(
-            row=0, column=1, padx=4, sticky=tk.W)
+        ttk.Checkbutton(coptionsSubframe, text="Run from RAM", variable=self.wantRunFromRAM).grid(row=0, column=1, padx=4, sticky=tk.W)
 
         self.wantCPP = tk.IntVar()
         self.wantCPP.set(args.cpp)
-        ttk.Checkbutton(coptionsSubframe, text="Generate C++",
-                        variable=self.wantCPP).grid(row=0, column=3, padx=4, sticky=tk.W)
+        ttk.Checkbutton(coptionsSubframe, text="Generate C++", variable=self.wantCPP).grid(row=0, column=3, padx=4, sticky=tk.W)
 
         ttk.Button(coptionsSubframe, text="Advanced...", command=self.config).grid(row=0, column=4, sticky=tk.E)
 
         self.wantCPPExceptions = tk.IntVar()
         self.wantCPPExceptions.set(args.cppexceptions)
-        ttk.Checkbutton(coptionsSubframe, text="Enable C++ exceptions",
-                        variable=self.wantCPPExceptions).grid(row=1, column=0, padx=4, sticky=tk.W)
+        ttk.Checkbutton(coptionsSubframe, text="Enable C++ exceptions", variable=self.wantCPPExceptions).grid(row=1, column=0, padx=4, sticky=tk.W)
 
         self.wantCPPRTTI = tk.IntVar()
         self.wantCPPRTTI.set(args.cpprtti)
-        ttk.Checkbutton(coptionsSubframe, text="Enable C++ RTTI",
-                        variable=self.wantCPPRTTI).grid(row=1, column=1, padx=4, sticky=tk.W)
+        ttk.Checkbutton(coptionsSubframe, text="Enable C++ RTTI", variable=self.wantCPPRTTI).grid(row=1, column=1, padx=4, sticky=tk.W)
 
         optionsRow += 3
 
         # Build Options section
 
         boptionsSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="Build Options")
-        boptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2,
-                              padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
+        boptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantBuild = tk.IntVar()
         self.wantBuild.set(args.build)
-        ttk.Checkbutton(boptionsSubframe, text="Run build after generation",
-                        variable=self.wantBuild).grid(row=0, column=0, padx=4, sticky=tk.W)
+        ttk.Checkbutton(boptionsSubframe, text="Run build after generation", variable=self.wantBuild).grid(row=0, column=0, padx=4, sticky=tk.W)
 
         self.wantOverwrite = tk.IntVar()
         self.wantOverwrite.set(args.overwrite)
-        ttk.Checkbutton(boptionsSubframe, text="Overwrite project if it already exists",
-                        variable=self.wantOverwrite).grid(row=0, column=1, padx=4, sticky=tk.W)
+        ttk.Checkbutton(boptionsSubframe, text="Overwrite project if it already exists", variable=self.wantOverwrite).grid(row=0, column=1, padx=4, sticky=tk.W)
 
         optionsRow += 2
 
         vscodeoptionsSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="IDE Options")
-        vscodeoptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2,
-                                   padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
+        vscodeoptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantVSCode = tk.IntVar()
-        ttk.Checkbutton(vscodeoptionsSubframe, text="Create VSCode project",
-                        variable=self.wantVSCode).grid(row=0, column=0, padx=4, sticky=tk.W)
+        ttk.Checkbutton(vscodeoptionsSubframe, text="Create VSCode project", variable=self.wantVSCode).grid(row=0, column=0, padx=4, sticky=tk.W)
 
-        ttk.Label(vscodeoptionsSubframe, text="     Debugger:").grid(row=0, column=1, padx=4, sticky=tk.W)
+        ttk.Label(vscodeoptionsSubframe, text = "     Debugger:").grid(row=0, column=1, padx=4, sticky=tk.W)
 
         self.debugger = ttk.Combobox(vscodeoptionsSubframe, values=debugger_list, state="readonly")
         self.debugger.grid(row=0, column=2, padx=4, sticky=tk.W)
@@ -633,7 +711,6 @@ class ProjectWindow(tk.Frame):
 
         # OK, Cancel, Help section
         # creating buttons
-
         QuitButton = ttk.Button(mainFrame, text="Quit", command=self.quit).grid(row=optionsRow, column=4, stick=tk.E, padx=10, pady=5)
         OKButton = ttk.Button(mainFrame, text="OK", command=self.OK).grid(row=optionsRow, column=3, padx=4, pady=5, sticky=tk.E)
 
@@ -651,7 +728,7 @@ class ProjectWindow(tk.Frame):
         f += self.featuresEntry2.getCheckedItems()
 
         for feat in features_list:
-            if features_list[feat][GUI_TEXT] in f:
+            if features_list[feat][GUI_TEXT] in f :
                 features.append(feat)
 
         return features
@@ -668,19 +745,11 @@ class ProjectWindow(tk.Frame):
         if (self.wantVSCode.get()):
             projects.append("vscode")
 
-        p = Parameters(
-            sdkPath=self.sdkpath, projectRoot=Path(projectPath),
-            projectName=self.projectName.get(),
-            gui=True, overwrite=self.wantOverwrite.get(),
-            build=self.wantBuild.get(),
-            features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
-            examples=self.wantExamples.get(),
-            uart=self.wantUART.get(),
-            usb=self.wantUSB.get(),
-            cpp=self.wantCPP.get(),
-            debugger=self.debugger.current(),
-            exceptions=self.wantCPPExceptions.get(),
-            rtti=self.wantCPPRTTI.get())
+        p = Parameters(sdkPath=self.sdkpath, projectRoot=Path(projectPath), projectName=self.projectName.get(),
+                       gui=True, overwrite=self.wantOverwrite.get(), build=self.wantBuild.get(),
+                       features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
+                       examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get(), cpp=self.wantCPP.get(),
+                       debugger=self.debugger.current(), exceptions=self.wantCPPExceptions.get(), rtti=self.wantCPPRTTI.get())
 
         DoEverything(self, p)
 
@@ -697,7 +766,6 @@ class ProjectWindow(tk.Frame):
 
     def _get_filepath(self, filename):
         return os.path.join(os.path.dirname(__file__), filename)
-
 
 def CheckPrerequisites():
     global isMac, isWindows
@@ -744,13 +812,10 @@ def ParseCommandLine():
     parser.add_argument("-r", "--runFromRAM", action='store_true', help="Run the program from RAM rather than flash")
     parser.add_argument("-uart", "--uart", action='store_true', default=1, help="Console output to UART (default)")
     parser.add_argument("-nouart", "--nouart", action='store_true', default=0, help="Disable console output to UART")
-    parser.add_argument("-usb", "--usb", action='store_true',
-                        help="Console output to USB (disables other USB functionality")
+    parser.add_argument("-usb", "--usb", action='store_true', help="Console output to USB (disables other USB functionality")
     parser.add_argument("-cpp", "--cpp", action='store_true', default=0, help="Generate C++ code")
-    parser.add_argument("-cpprtti", "--cpprtti", action='store_true',
-                        default=0, help="Enable C++ RTTI (Uses more memory)")
-    parser.add_argument("-cppex", "--cppexceptions", action='store_true',
-                        default=0, help="Enable C++ exceptions (Uses more memory)")
+    parser.add_argument("-cpprtti", "--cpprtti", action='store_true', default=0, help="Enable C++ RTTI (Uses more memory)")
+    parser.add_argument("-cppex", "--cppexceptions", action='store_true', default=0, help="Enable C++ exceptions (Uses more memory)")
     parser.add_argument("-d", "--debugger", type=int, help="Select debugger (0 = SWD, 1 = PicoProbe)", default=0)
 
     return parser.parse_args()
@@ -758,79 +823,281 @@ def ParseCommandLine():
 
 def GenerateMain(folder, projectName, features, cpp):
 
-    template = jinja_env.get_template('main.txt')
-    mapping = dict(includes=[], libraries=[])
-
-    if (features):
-        # Add any includes
-        includes = []
-        for feat in features:
-            if (feat in features_list):
-                includes.append(features_list[feat][H_FILE])
-            elif (feat in stdlib_examples_list):
-                includes.append(stdlib_examples_list[feat][H_FILE])
-        mapping['includes'] = includes
-
-        # Add library names so we can lookup any defines or initialisers
-        mapping['libraries'] = features
-
     if cpp:
         filename = Path(folder) / (projectName + '.cpp')
     else:
         filename = Path(folder) / (projectName + '.c')
 
-    with open(filename, 'w') as f:
-        f.write(template.render(mapping))
+    file = open(filename, 'w')
+
+    main = ('#include <stdio.h>\n'
+            '#include "pico/stdlib.h"\n'
+            )
+    file.write(main)
+
+    if (features):
+
+        # Add any includes
+        for feat in features:
+            if (feat in features_list):
+                o = '#include "' +  features_list[feat][H_FILE] + '"\n'
+                file.write(o)
+            if (feat in stdlib_examples_list):
+                o = '#include "' +  stdlib_examples_list[feat][H_FILE] + '"\n'
+                file.write(o)
+
+        file.write('\n')
+
+        # Add any defines
+        for feat in features:
+            if (feat in code_fragments_per_feature):
+                for s in code_fragments_per_feature[feat][DEFINES]:
+                    file.write(s)
+                    file.write('\n')
+                file.write('\n')
+
+    main = ('\n\n'
+            'int main()\n'
+            '{\n'
+            '    stdio_init_all();\n\n'
+            )
+
+    if (features):
+        # Add any initialisers
+        indent = 4
+        for feat in features:
+            if (feat in code_fragments_per_feature):
+                for s in code_fragments_per_feature[feat][INITIALISERS]:
+                    main += (" " * indent)
+                    main += s
+                    main += '\n'
+            main += '\n'
+
+    main += ('    puts("Hello, world!");\n\n'
+             '    return 0;\n'
+             '}\n'
+            )
+
+    file.write(main)
+
+    file.close()
 
 
 def GenerateCMake(folder, params):
 
+    cmake_header1 = ("# Generated Cmake Pico project file\n\n"
+                 "cmake_minimum_required(VERSION 3.13)\n\n"
+                 "set(CMAKE_C_STANDARD 11)\n"
+                 "set(CMAKE_CXX_STANDARD 17)\n\n"
+                 "# initalize pico_sdk from installed location\n"
+                 "# (note this can come from environment, CMake cache etc)\n"
+                )
+
+    cmake_header2 = ("# Pull in Raspberry Pi Pico SDK (must be before project)\n"
+                "include(pico_sdk_import.cmake)\n\n"
+                )
+
+    cmake_header3 = (
+                "\n# Initialise the Raspberry Pi Pico SDK\n"
+                "pico_sdk_init()\n\n"
+                "# Add executable. Default name is the project name, version 0.1\n\n"
+                )
+
+
     filename = Path(folder) / CMAKELIST_FILENAME
-    template = jinja_env.get_template("cmake.txt")
 
-    mapping = {
-        # CMake will accept forward slashes on Windows, and that's
-        # seemingly a bit easier to handle than the backslashes
-        'sdk_path': str(params.sdkPath).replace('\\', '/'),
-        'project_name': params.projectName,
-        # add the preprocessor defines for overall configuration
-        'configs': params.configs, 'exceptions': params.exceptions,
-        'rtti': params.rtti, 'want_cpp': params.wantCPP, 'want_run_from_ram': params.wantRunFromRAM,
-        # Console output destinations
-        'want_uart': params.wantUART, 'want_usb': params.wantUSB
-    }
+    file = open(filename, 'w')
 
-    # selected libraries/features
+    file.write(cmake_header1)
+
+    # OK, for the path, CMake will accept forward slashes on Windows, and thats
+    # seemingly a bit easier to handle than the backslashes
+
+    p = str(params.sdkPath).replace('\\','/')
+    p = '\"' + p + '\"'
+
+    file.write('set(PICO_SDK_PATH ' + p + ')\n\n')
+    file.write(cmake_header2)
+    file.write('project(' + params.projectName + ' C CXX ASM)\n')
+
+    if params.exceptions:
+        file.write("\nset(PICO_CXX_ENABLE_EXCEPTIONS 1)\n")
+
+    if params.rtti:
+        file.write("\nset(PICO_CXX_ENABLE_RTTI 1)\n")
+
+    file.write(cmake_header3)
+
+    # add the preprocessor defines for overall configuration
+    if params.configs:
+        file.write('# Add any PICO_CONFIG entries specified in the Advanced settings\n')
+        for c, v in params.configs.items():
+            if v == "True":
+                v = "1"
+            elif v == "False":
+                v = "0"
+            file.write('add_compile_definitions(' + c + '=' + v + ')\n')
+        file.write('\n')
+
+    # No GUI/command line to set a different executable name at this stage
+    executableName = params.projectName
+
+    if params.wantCPP:
+        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp )\n\n')
+    else:
+        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c )\n\n')
+
+    file.write('pico_set_program_name(' + params.projectName + ' "' + executableName + '")\n')
+    file.write('pico_set_program_version(' + params.projectName + ' "0.1")\n\n')
+
+    if params.wantRunFromRAM:
+        file.write('# no_flash means the target is to run from RAM\n')
+        file.write('pico_set_binary_type(' + params.projectName + ' no_flash)\n\n')
+
+    # Console output destinations
+    if params.wantUART:
+        file.write('pico_enable_stdio_uart(' + params.projectName + ' 1)\n')
+    else:
+        file.write('pico_enable_stdio_uart(' + params.projectName + ' 0)\n')
+
+    if params.wantUSB:
+        file.write('pico_enable_stdio_usb(' + params.projectName + ' 1)\n\n')
+    else:
+        file.write('pico_enable_stdio_usb(' + params.projectName + ' 0)\n\n')
+
+    # Standard libraries
+    file.write('# Add the standard library to the build\n')
+    file.write('target_link_libraries(' + params.projectName + ' ' + STANDARD_LIBRARIES + ')\n\n')
+
+
+    # Selected libraries/features
     if (params.features):
-        mapping['features'] = params.features
-        features_lib_names = []
+        file.write('# Add any user requested libraries\n')
+        file.write('target_link_libraries(' + params.projectName + '\n')
         for feat in params.features:
             if (feat in features_list):
-                features_lib_names.append(features_list[feat][LIB_NAME])
-        mapping['features_list'] = features_lib_names
+                file.write("        " + features_list[feat][LIB_NAME] + '\n')
+        file.write('        )\n\n')
 
-    with open(filename, 'w') as f:
-        f.write(template.render(mapping))
+    file.write('pico_add_extra_outputs(' + params.projectName + ')\n\n')
+
+    file.close()
 
 
 # Generates the requested project files, if any
-def generateProjectFiles(projectPath, debugger):
+def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
+
+    oldCWD = os.getcwd()
+
+    os.chdir(projectPath)
 
     deb = debugger_config_list[debugger]
-    vscode_path = Path(projectPath, VSCODE_FOLDER)
-    if not vscode_path.is_dir():
-        vscode_path.mkdir(exist_ok=True)
 
-    args = [('vscode/launch.txt', VSCODE_LAUNCH_FILENAME, dict(deb=deb)),
-            ('vscode/c_properties.txt', VSCODE_C_PROPERTIES_FILENAME, dict()),
-            ('vscode/settings.txt', VSCODE_SETTINGS_FILENAME, dict()),
-            ('vscode/extensions.txt', VSCODE_EXTENSIONS_FILENAME, dict())]
+   # if debugger==0 else 'picoprobe.cfg
+    for p in projects :
+        if p == 'vscode':
+            v1 = ('{\n'
+                  '  // Use IntelliSense to learn about possible attributes.\n'
+                  '  // Hover to view descriptions of existing attributes.\n'
+                  '  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387\n'
+                  '  "version": "0.2.0",\n'
+                  '  "configurations": [\n'
+                  '    {\n'
+                  '      "name": "Cortex Debug",\n'
+                  '      "cwd": "${workspaceRoot}",\n'
+                  '      "executable": "${command:cmake.launchTargetPath}",\n'
+                  '      "request": "launch",\n'
+                  '      "type": "cortex-debug",\n'
+                  '      "servertype": "openocd",\n'
+                  '      "gdbPath": "gdb-multiarch",\n'
+                  '      "device": "RP2040",\n'
+                  '      "configFiles": [\n' + \
+                  '        "interface/' + deb + '",\n' + \
+                  '        "target/rp2040.cfg"\n' + \
+                  '        ],\n' +  \
+                  '      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",\n'
+                  '      "runToMain": true,\n'
+                  '      // Give restart the same functionality as runToMain\n'
+                  '      "postRestartCommands": [\n'
+                  '          "break main",\n'
+                  '          "continue"\n'
+                  '      ]\n'
+                  '    }\n'
+                  '  ]\n'
+                  '}\n')
 
-    for template_name, file_name, mapping in args:
-        template = jinja_env.get_template(template_name)
-        mapping = dict(deb=deb)
-        with open(projectPath / VSCODE_FOLDER / file_name, 'w') as f:
-            f.write(template.render(mapping))
+            c1 = ('{\n'
+                  '  "configurations": [\n'
+                  '    {\n'
+                  '      "name": "Linux",\n'
+                  '      "includePath": [\n'
+                  '        "${workspaceFolder}/**",\n'
+                  '        "${env:PICO_SDK_PATH}/**"\n'
+                  '      ],\n'
+                  '      "defines": [],\n'
+                  '      "compilerPath": "/usr/bin/arm-none-eabi-gcc",\n'
+                  '      "cStandard": "gnu17",\n'
+                  '      "cppStandard": "gnu++14",\n'
+                  '      "intelliSenseMode": "linux-gcc-arm",\n'
+                  '      "configurationProvider" : "ms-vscode.cmake-tools"\n'
+                  '    }\n'
+                  '  ],\n'
+                  '  "version": 4\n'
+                  '}\n')
+
+            s1 = ( '{\n'
+                   '  "cmake.configureOnOpen": false,\n'
+                   '  "cmake.statusbar.advanced": {\n'
+                   '    "debug" : {\n'
+                   '      "visibility": "hidden"\n'
+                   '              },'
+                   '    "launch" : {\n'
+                   '      "visibility": "hidden"\n'
+                   '               },\n'
+                   '    "build" : {\n'
+                   '      "visibility": "hidden"\n'
+                   '               },\n'
+                   '    "buildTarget" : {\n'
+                   '      "visibility": "hidden"\n'
+                   '               },\n'
+                   '     },\n'
+                   '}\n')
+
+            e1 = ( '{\n'
+                   '  "recommendations": [\n'
+                   '    "marus25.cortex-debug",\n'
+                   '    "ms-vscode.cmake-tools",\n'
+                   '    "ms-vscode.cpptools"\n'
+                   '  ]\n'
+                   '}\n')
+
+            # Create a build folder, and run our cmake project build from it
+            if not os.path.exists(VSCODE_FOLDER):
+                os.mkdir(VSCODE_FOLDER)
+
+            os.chdir(VSCODE_FOLDER)
+
+            filename = VSCODE_LAUNCH_FILENAME
+            file = open(filename, 'w')
+            file.write(v1)
+            file.close()
+
+            file = open(VSCODE_C_PROPERTIES_FILENAME, 'w')
+            file.write(c1)
+            file.close()
+
+            file = open(VSCODE_SETTINGS_FILENAME, 'w')
+            file.write(s1)
+            file.close()
+
+            file = open(VSCODE_EXTENSIONS_FILENAME, 'w')
+            file.write(e1)
+            file.close()
+
+        else :
+            print('Unknown project type requested')
+
+    os.chdir(oldCWD)
 
 
 def LoadConfigurations():
@@ -842,13 +1109,11 @@ def LoadConfigurations():
     except:
         print("No Pico configurations file found. Continuing without")
 
-
 def DoEverything(parent, params):
 
     if not os.path.exists(params.projectRoot):
         if params.wantGUI:
-            mb.showerror('Raspberry Pi Pico Project Generator',
-                         'Invalid project path. Select a valid path and try again')
+            mb.showerror('Raspberry Pi Pico Project Generator', 'Invalid project path. Select a valid path and try again')
             return
         else:
             print('Invalid project path')
@@ -867,12 +1132,10 @@ def DoEverything(parent, params):
     # First check if there is already a project in the folder
     # If there is we abort unless the overwrite flag it set
     if os.path.exists(CMAKELIST_FILENAME):
-        if not params.wantOverwrite:
+        if not params.wantOverwrite :
             if params.wantGUI:
                 # We can ask the user if they want to overwrite
-                y = mb.askquestion(
-                    'Raspberry Pi Pico Project Generator',
-                    'There already appears to be a project in this folder. \nPress Yes to overwrite project files, or Cancel to chose another folder')
+                y = mb.askquestion('Raspberry Pi Pico Project Generator', 'There already appears to be a project in this folder. \nPress Yes to overwrite project files, or Cancel to chose another folder')
                 if y != 'yes':
                     return
             else:
@@ -882,17 +1145,17 @@ def DoEverything(parent, params):
         # We should really confirm the user wants to overwrite
         #print('Are you sure you want to overwrite the existing project files? (y/N)')
         #c = input().split(" ")[0]
-        # if c != 'y' and c != 'Y' :
+        #if c != 'y' and c != 'Y' :
         #    sys.exit(0)
 
     # Copy the SDK finder cmake file to our project folder
     # Can be found here <PICO_SDK_PATH>/external/pico_sdk_import.cmake
-    shutil.copyfile(params.sdkPath / 'external' / 'pico_sdk_import.cmake', projectPath / 'pico_sdk_import.cmake')
+    shutil.copyfile(params.sdkPath / 'external' / 'pico_sdk_import.cmake', projectPath / 'pico_sdk_import.cmake' )
 
     if params.features:
         features_and_examples = params.features[:]
     else:
-        features_and_examples = []
+        features_and_examples= []
 
     if params.wantExamples:
         features_and_examples = list(stdlib_examples_list.keys()) + features_and_examples
@@ -924,7 +1187,7 @@ def DoEverything(parent, params):
         os.system(cmakeCmd)
 
     if params.projects:
-        generateProjectFiles(projectPath, params.debugger)
+        generateProjectFiles(projectPath, params.projectName, params.sdkPath, params.projects, params.debugger)
 
     if params.wantBuild:
         if params.wantGUI:
@@ -951,11 +1214,11 @@ if args.debugger > 1:
 # Check we have everything we need to compile etc
 c = CheckPrerequisites()
 
-# TODO Do both warnings in the same error message so user does have to keep coming back to find still more to do
+## TODO Do both warnings in the same error message so user does have to keep coming back to find still more to do
 
 if c == None:
     m = 'Unable to find the `' + COMPILER_NAME + '` compiler\n'
-    m += 'You will need to install an appropriate compiler to build a Raspberry Pi Pico project\n'
+    m +='You will need to install an appropriate compiler to build a Raspberry Pi Pico project\n'
     m += 'See the Raspberry Pi Pico documentation for how to do this on your particular platform\n'
 
     if (args.gui):
@@ -979,7 +1242,7 @@ if p == None:
 sdkPath = Path(p)
 
 if args.gui:
-    RunGUI(sdkPath, args)  # does not return, only exits
+    RunGUI(sdkPath, args) # does not return, only exits
 
 projectRoot = Path(os.getcwd())
 
@@ -997,11 +1260,11 @@ if args.list or args.configs:
         print('\n')
 
     sys.exit(0)
-else:
-    p = Parameters(
-        sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name, gui=False, overwrite=args.overwrite,
-        build=args.build, features=args.feature, projects=args.project, configs=(),
-        runFromRAM=args.runFromRAM, examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp,
-        debugger=args.debugger, exceptions=args.cppexceptions, rtti=args.cpprtti)
+else :
+    p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
+                   gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
+                   projects=args.project, configs=(), runFromRAM=args.runFromRAM,
+                   examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, debugger=args.debugger, exceptions=args.cppexceptions, rtti=args.cpprtti)
 
     DoEverything(None, p)
+
