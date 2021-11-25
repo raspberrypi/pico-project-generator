@@ -1176,7 +1176,7 @@ def DoEverything(parent, params):
 
     if isWindows:
         cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" ..'
-        makeCmd = 'nmake -j ' + str(cpus)
+        makeCmd = 'nmake '
     else:
         cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug ..'
         makeCmd = 'make -j' + str(cpus)
