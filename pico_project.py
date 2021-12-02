@@ -581,6 +581,8 @@ class ConfigurationWindow(tk.Toplevel):
     def get(self):
         return self.results
 
+def get_filepath(filename):
+    return os.path.join(os.path.dirname(__file__), filename)
 
 # Our main window
 class ProjectWindow(tk.Frame):
@@ -599,7 +601,7 @@ class ProjectWindow(tk.Frame):
         mainFrame = tk.Frame(self, bg=GetBackground()).grid(row=0, column=0, columnspan=6, rowspan=12)
 
         # Need to keep a reference to the image or it will not appear.
-        self.logo = tk.PhotoImage(file=self._get_filepath("logo_alpha.gif"))
+        self.logo = tk.PhotoImage(file=get_filepath("logo_alpha.gif"))
         logowidget = ttk.Label(mainFrame, image=self.logo, borderwidth=0, relief="solid").grid(row=0,column=0, columnspan=5, pady=10)
 
         namelbl = ttk.Label(mainFrame, text='Project Name :').grid(row=2, column=0, sticky=tk.E)
@@ -764,9 +766,6 @@ class ProjectWindow(tk.Frame):
         # Run the configuration window
         self.configs = ConfigurationWindow(self, self.configs).get()
 
-    def _get_filepath(self, filename):
-        return os.path.join(os.path.dirname(__file__), filename)
-
 def CheckPrerequisites():
     global isMac, isWindows
     isMac = (platform.system() == 'Darwin')
@@ -799,7 +798,7 @@ def CheckSDKPath(gui):
 def ParseCommandLine():
     parser = argparse.ArgumentParser(description='Pico Project generator')
     parser.add_argument("name", nargs="?", help="Name of the project")
-    parser.add_argument("-t", "--tsv", help="Select an alternative pico_configs.tsv file", default="pico_configs.tsv")
+    parser.add_argument("-t", "--tsv", help="Select an alternative pico_configs.tsv file", default=get_filepath("pico_configs.tsv"))
     parser.add_argument("-o", "--output", help="Set an alternative CMakeList.txt filename", default="CMakeLists.txt")
     parser.add_argument("-x", "--examples", action='store_true', help="Add example code for the Pico standard library")
     parser.add_argument("-l", "--list", action='store_true', help="List available features")
