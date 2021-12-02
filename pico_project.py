@@ -1211,7 +1211,6 @@ args = ParseCommandLine()
 if args.nouart:
     args.uart = False
 
-#  TODO this could be better, need some constants etc
 if args.debugger > len(debugger_list) - 1:
     args.debugger = 0
 
