@@ -800,6 +800,7 @@ def GetFilePath(filename):
     return os.path.join(os.path.dirname(script_file), filename)
 
 def ParseCommandLine():
+    debugger_flags = ', '.join('{} = {}'.format(i, v) for i, v in enumerate(debugger_list))
     parser = argparse.ArgumentParser(description='Pico Project generator')
     parser.add_argument("name", nargs="?", help="Name of the project")
     parser.add_argument("-t", "--tsv", help="Select an alternative pico_configs.tsv file", default=GetFilePath("pico_configs.tsv"))
@@ -819,7 +820,7 @@ def ParseCommandLine():
     parser.add_argument("-cpp", "--cpp", action='store_true', default=0, help="Generate C++ code")
     parser.add_argument("-cpprtti", "--cpprtti", action='store_true', default=0, help="Enable C++ RTTI (Uses more memory)")
     parser.add_argument("-cppex", "--cppexceptions", action='store_true', default=0, help="Enable C++ exceptions (Uses more memory)")
-    parser.add_argument("-d", "--debugger", type=int, help="Select debugger (0 = SWD, 1 = PicoProbe)", default=0)
+    parser.add_argument("-d", "--debugger", type=int, help="Select debugger ({})".format(debugger_flags), default=0)
 
     return parser.parse_args()
 
@@ -1211,7 +1212,7 @@ if args.nouart:
     args.uart = False
 
 #  TODO this could be better, need some constants etc
-if args.debugger > 1:
+if args.debugger > len(debugger_list) - 1:
     args.debugger = 0
 
 # Check we have everything we need to compile etc
