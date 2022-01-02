@@ -893,7 +893,7 @@ def GenerateCMake(folder, params):
                  "cmake_minimum_required(VERSION 3.13)\n\n"
                  "set(CMAKE_C_STANDARD 11)\n"
                  "set(CMAKE_CXX_STANDARD 17)\n\n"
-                 "# initalize pico_sdk from installed location\n"
+                 "# Initialise pico_sdk from installed location\n"
                  "# (note this can come from environment, CMake cache etc)\n"
                 )
 
