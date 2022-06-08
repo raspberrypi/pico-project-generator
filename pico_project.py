@@ -694,11 +694,14 @@ class ProjectWindow(tk.Frame):
         ttk.Checkbutton(boptionsSubframe, text="Overwrite project if it already exists", variable=self.wantOverwrite).grid(row=0, column=1, padx=4, sticky=tk.W)
 
         optionsRow += 2
+        
+        # IDE Options section
 
         vscodeoptionsSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="IDE Options")
         vscodeoptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantVSCode = tk.IntVar()
+        self.wantVSCode.set('vscode' in args.project)
         ttk.Checkbutton(vscodeoptionsSubframe, text="Create VSCode project", variable=self.wantVSCode).grid(row=0, column=0, padx=4, sticky=tk.W)
 
         ttk.Label(vscodeoptionsSubframe, text = "     Debugger:").grid(row=0, column=1, padx=4, sticky=tk.W)
