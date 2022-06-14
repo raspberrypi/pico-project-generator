@@ -8,7 +8,7 @@ It will also add example code for any features and optionally for some standard 
 
 ## Command line
 
-Running `./pico_project --help` will give a list of the available command line parameters
+Running `./pico_project.py --help` will give a list of the available command line parameters
 
 ```
 usage: pico_project.py [-h] [-t TSV] [-o OUTPUT] [-x] [-l] [-c] [-f FEATURE] [-over] [-b] [-g] [-p PROJECT] [-r] [-uart] [-usb] [name]
@@ -40,7 +40,7 @@ optional arguments:
    cpp, --cpp           Generate C++ code
   -d DEBUGGER, --debugger DEBUGGER   Select debugger (0 = SWD, 1 = PicoProbe)
 ```
-You can list the features supported by the tools by using `./pico_project --list`. These features can
+You can list the features supported by the tools by using `./pico_project.py --list`. These features can
 be added to the project using the `--feature` options, this can be used multiple times.
 
 
