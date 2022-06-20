@@ -701,7 +701,10 @@ class ProjectWindow(tk.Frame):
         vscodeoptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantVSCode = tk.IntVar()
-        self.wantVSCode.set('vscode' in args.project)
+        if args.project is None:
+            self.wantVSCode.set(False)
+        else:
+            self.wantVSCode.set('vscode' in args.project)
         ttk.Checkbutton(vscodeoptionsSubframe, text="Create VSCode project", variable=self.wantVSCode).grid(row=0, column=0, padx=4, sticky=tk.W)
 
         ttk.Label(vscodeoptionsSubframe, text = "     Debugger:").grid(row=0, column=1, padx=4, sticky=tk.W)
@@ -815,7 +818,7 @@ def ParseCommandLine():
     parser.add_argument("-over", "--overwrite", action='store_true', help="Overwrite any existing project AND files")
     parser.add_argument("-b", "--build", action='store_true', help="Build after project created")
     parser.add_argument("-g", "--gui", action='store_true', help="Run a GUI version of the project generator")
-    parser.add_argument("-p", "--project", action='append', help="Generate projects files for IDE. Options are: vscode")
+    parser.add_argument("-p", "--project", action='append', default='vscode', help="Generate projects files for IDE. Options are: vscode")
     parser.add_argument("-r", "--runFromRAM", action='store_true', help="Run the program from RAM rather than flash")
     parser.add_argument("-uart", "--uart", action='store_true', default=1, help="Console output to UART (default)")
     parser.add_argument("-nouart", "--nouart", action='store_true', default=0, help="Disable console output to UART")
