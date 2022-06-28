@@ -694,11 +694,17 @@ class ProjectWindow(tk.Frame):
         ttk.Checkbutton(boptionsSubframe, text="Overwrite project if it already exists", variable=self.wantOverwrite).grid(row=0, column=1, padx=4, sticky=tk.W)
 
         optionsRow += 2
+        
+        # IDE Options section
 
         vscodeoptionsSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="IDE Options")
         vscodeoptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantVSCode = tk.IntVar()
+        if args.project is None:
+            self.wantVSCode.set(False)
+        else:
+            self.wantVSCode.set('vscode' in args.project)
         ttk.Checkbutton(vscodeoptionsSubframe, text="Create VSCode project", variable=self.wantVSCode).grid(row=0, column=0, padx=4, sticky=tk.W)
 
         ttk.Label(vscodeoptionsSubframe, text = "     Debugger:").grid(row=0, column=1, padx=4, sticky=tk.W)
@@ -812,7 +818,7 @@ def ParseCommandLine():
     parser.add_argument("-over", "--overwrite", action='store_true', help="Overwrite any existing project AND files")
     parser.add_argument("-b", "--build", action='store_true', help="Build after project created")
     parser.add_argument("-g", "--gui", action='store_true', help="Run a GUI version of the project generator")
-    parser.add_argument("-p", "--project", action='append', help="Generate projects files for IDE. Options are: vscode")
+    parser.add_argument("-p", "--project", action='append', default='vscode', help="Generate projects files for IDE. Options are: vscode")
     parser.add_argument("-r", "--runFromRAM", action='store_true', help="Run the program from RAM rather than flash")
     parser.add_argument("-uart", "--uart", action='store_true', default=1, help="Console output to UART (default)")
     parser.add_argument("-nouart", "--nouart", action='store_true', default=0, help="Disable console output to UART")
@@ -1020,8 +1026,8 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '        "target/rp2040.cfg"\n' + \
                   '        ],\n' +  \
                   '      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",\n'
-                  '      "runToMain": true,\n'
-                  '      // Give restart the same functionality as runToMain\n'
+                  '      "runToEntryPoint": "main",\n'
+                  '      // Give restart the same functionality as runToEntryPoint - main\n'
                   '      "postRestartCommands": [\n'
                   '          "break main",\n'
                   '          "continue"\n'
@@ -1270,4 +1276,3 @@ else :
                    examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, debugger=args.debugger, exceptions=args.cppexceptions, rtti=args.cpprtti)
 
     DoEverything(None, p)
-
