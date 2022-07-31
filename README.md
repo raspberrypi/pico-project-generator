@@ -11,7 +11,7 @@ It will also add example code for any features and optionally for some standard 
 Running `./pico_project.py --help` will give a list of the available command line parameters
 
 ```
-usage: pico_project.py [-h] [-t TSV] [-o OUTPUT] [-x] [-l] [-c] [-f FEATURE] [-over] [-b] [-g] [-p PROJECT] [-r] [-uart] [-usb] [name]
+usage: pico_project.py [-h] [-t TSV] [-o OUTPUT] [-x] [-l] [-c] [-f FEATURE] [-over] [-b] [-g] [-p PROJECT] [-r] [-uart] [-usb] [-w] [name]
 
 Pico Project generator
 
@@ -39,6 +39,7 @@ optional arguments:
   -usb, --usb           Console output to USB (disables other USB functionality)
    cpp, --cpp           Generate C++ code
   -d DEBUGGER, --debugger DEBUGGER   Select debugger (0 = SWD, 1 = PicoProbe)
+  -w, --picow           Build for Pi Pico W
 ```
 You can list the features supported by the tools by using `./pico_project.py --list`. These features can
 be added to the project using the `--feature` options, this can be used multiple times.

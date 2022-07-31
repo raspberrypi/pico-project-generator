@@ -206,7 +206,7 @@ isWindows = False
 
 class Parameters():
     def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects,
-                 configs, runFromRAM, examples, uart, usb, cpp, debugger, exceptions, rtti):
+                 configs, runFromRAM, examples, uart, usb, cpp, debugger, exceptions, rtti, picow):
         self.sdkPath = sdkPath
         self.projectRoot = projectRoot
         self.projectName = projectName
@@ -224,6 +224,7 @@ class Parameters():
         self.debugger = debugger
         self.exceptions = exceptions
         self.rtti = rtti
+        self.picow = picow
 
 def GetBackground():
     return 'white'
@@ -612,11 +613,15 @@ class ProjectWindow(tk.Frame):
 
         nameEntry = ttk.Entry(mainFrame, textvariable=self.projectName).grid(row=2, column=1, sticky=tk.W+tk.E, padx=5)
 
+        self.wantPicoW = tk.IntVar()
+        self.wantPicoW.set(args.picow)
+        ttk.Checkbutton(mainFrame, text="Pi Pico W", variable=self.wantPicoW).grid(row=2, column=2, padx=4, sticky=tk.W)
+
         locationlbl = ttk.Label(mainFrame, text='Location :').grid(row=3, column=0, sticky=tk.E)
         self.locationName = tk.StringVar()
         self.locationName.set(os.getcwd())
         locationEntry = ttk.Entry(mainFrame, textvariable=self.locationName).grid(row=3, column=1, columnspan=3, sticky=tk.W+tk.E, padx=5)
-        locationBrowse = ttk.Button(mainFrame, text='Browse', command=self.browse).grid(row=3, column=4)
+        locationBrowse = ttk.Button(mainFrame, text='Browse', command=self.browse).grid(row=3, column=4)        
 
         # Features section
         featuresframe = ttk.LabelFrame(mainFrame, text="Library Options", relief=tk.RIDGE, borderwidth=2)
@@ -755,7 +760,8 @@ class ProjectWindow(tk.Frame):
                        gui=True, overwrite=self.wantOverwrite.get(), build=self.wantBuild.get(),
                        features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
                        examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get(), cpp=self.wantCPP.get(),
-                       debugger=self.debugger.current(), exceptions=self.wantCPPExceptions.get(), rtti=self.wantCPPRTTI.get())
+                       debugger=self.debugger.current(), exceptions=self.wantCPPExceptions.get(), rtti=self.wantCPPRTTI.get(),
+                       picow=self.wantPicoW.get())
 
         DoEverything(self, p)
 
@@ -827,6 +833,7 @@ def ParseCommandLine():
     parser.add_argument("-cpprtti", "--cpprtti", action='store_true', default=0, help="Enable C++ RTTI (Uses more memory)")
     parser.add_argument("-cppex", "--cppexceptions", action='store_true', default=0, help="Enable C++ exceptions (Uses more memory)")
     parser.add_argument("-d", "--debugger", type=int, help="Select debugger ({})".format(debugger_flags), default=0)
+    parser.add_argument("-w", "--picow", action="store_true", help="Build for Pi Pico W", default=0)
 
     return parser.parse_args()
 
@@ -1184,11 +1191,15 @@ def DoEverything(parent, params):
     if cpus == None:
         cpus = 1
 
+    pico_board = "pico"
+    if params.picow:
+        pico_board= "pico_w"
+
     if isWindows:
-        cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" ..'
+        cmakeCmd = f'cmake -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD={pico_board} -G "NMake Makefiles" ..'
         makeCmd = 'nmake '
     else:
-        cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug ..'
+        cmakeCmd = f'cmake -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD={pico_board} ..'
         makeCmd = 'make -j' + str(cpus)
 
     if params.wantGUI:
@@ -1273,6 +1284,8 @@ else :
     p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
                    gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
                    projects=args.project, configs=(), runFromRAM=args.runFromRAM,
-                   examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, debugger=args.debugger, exceptions=args.cppexceptions, rtti=args.cpprtti)
+                   examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, 
+                   debugger=args.debugger, exceptions=args.cppexceptions, rtti=args.cpprtti,
+                   picow=args.picow)
 
     DoEverything(None, p)
