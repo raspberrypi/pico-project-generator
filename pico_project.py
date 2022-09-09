@@ -205,9 +205,10 @@ isMac = False
 isWindows = False
 
 class Parameters():
-    def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects,
+    def __init__(self, sdkPath, compilerPath, projectRoot, projectName, gui, overwrite, build, features, projects,
                  configs, runFromRAM, examples, uart, usb, cpp, debugger, exceptions, rtti):
         self.sdkPath = sdkPath
+        self.compilerPath = compilerPath
         self.projectRoot = projectRoot
         self.projectName = projectName
         self.wantGUI = gui
@@ -237,7 +238,7 @@ def GetTextColour():
 def GetButtonTextColour():
     return '#c51a4a'
 
-def RunGUI(sdkpath, args):
+def RunGUI(sdkpath, compilerpath, args):
     root = tk.Tk()
     style = ttk.Style(root)
     style.theme_use('default')
@@ -251,7 +252,7 @@ def RunGUI(sdkpath, args):
     ttk.Style().configure("TCombobox", foreground=GetTextColour(), background=GetBackground() )
     ttk.Style().configure("TListbox", foreground=GetTextColour(), background=GetBackground() )
 
-    app = ProjectWindow(root, sdkpath, args)
+    app = ProjectWindow(root, sdkpath, compilerpath, args)
 
     app.configure(background=GetBackground())
 
@@ -585,10 +586,11 @@ class ConfigurationWindow(tk.Toplevel):
 # Our main window
 class ProjectWindow(tk.Frame):
 
-    def __init__(self, parent, sdkpath, args):
+    def __init__(self, parent, sdkpath, compilerpath, args):
         tk.Frame.__init__(self, parent)
         self.master = parent
         self.sdkpath = sdkpath
+        self.compilerpath = compilerpath
         self.init_window(args)
         self.configs = dict()
 
@@ -751,7 +753,7 @@ class ProjectWindow(tk.Frame):
         if (self.wantVSCode.get()):
             projects.append("vscode")
 
-        p = Parameters(sdkPath=self.sdkpath, projectRoot=Path(projectPath), projectName=self.projectName.get(),
+        p = Parameters(sdkPath=self.sdkpath, compilerPath=self.compilerpath, projectRoot=Path(projectPath), projectName=self.projectName.get(),
                        gui=True, overwrite=self.wantOverwrite.get(), build=self.wantBuild.get(),
                        features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
                        examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get(), cpp=self.wantCPP.get(),
@@ -995,7 +997,7 @@ def GenerateCMake(folder, params):
 
 
 # Generates the requested project files, if any
-def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
+def generateProjectFiles(projectPath, projectName, sdkPath, compilerPath, projects, debugger):
 
     oldCWD = os.getcwd()
 
@@ -1045,7 +1047,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '        "${env:PICO_SDK_PATH}/**"\n'
                   '      ],\n'
                   '      "defines": [],\n'
-                  '      "compilerPath": "/usr/bin/arm-none-eabi-gcc",\n'
+                 f'      "compilerPath": "{compilerPath}",\n'
                   '      "cStandard": "gnu17",\n'
                   '      "cppStandard": "gnu++14",\n'
                   '      "intelliSenseMode": "linux-gcc-arm",\n'
@@ -1197,7 +1199,7 @@ def DoEverything(parent, params):
         os.system(cmakeCmd)
 
     if params.projects:
-        generateProjectFiles(projectPath, params.projectName, params.sdkPath, params.projects, params.debugger)
+        generateProjectFiles(projectPath, params.projectName, params.sdkPath, params.compilerPath, params.projects, params.debugger)
 
     if params.wantBuild:
         if params.wantGUI:
@@ -1236,6 +1238,8 @@ if c == None:
         print(m)
     sys.exit(-1)
 
+compilerPath = Path(c)
+
 if args.name == None and not args.gui and not args.list and not args.configs:
     print("No project name specfied\n")
     sys.exit(-1)
@@ -1251,7 +1255,7 @@ if p == None:
 sdkPath = Path(p)
 
 if args.gui:
-    RunGUI(sdkPath, args) # does not return, only exits
+    RunGUI(sdkPath, compilerPath, args) # does not return, only exits
 
 projectRoot = Path(os.getcwd())
 
@@ -1270,7 +1274,7 @@ if args.list or args.configs:
 
     sys.exit(0)
 else :
-    p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
+    p = Parameters(sdkPath=sdkPath, compilerPath=compilerPath, projectRoot=projectRoot, projectName=args.name,
                    gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
                    projects=args.project, configs=(), runFromRAM=args.runFromRAM,
                    examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, debugger=args.debugger, exceptions=args.cppexceptions, rtti=args.cpprtti)
