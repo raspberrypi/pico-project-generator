@@ -1240,13 +1240,21 @@ def LoadConfigurations():
 
 def LoadBoardTypes(sdkPath):
     # Scan the boards folder for all header files, extract filenames, and make a list of the results
-    # folder is <PICO_SDK_PATH>/src/boards/include/boards/*
+    # default folder is <PICO_SDK_PATH>/src/boards/include/boards/*
+    # If the PICO_BOARD_HEADER_DIRS environment variable is set, use that as well
 
     loc = sdkPath / "src/boards/include/boards"
     boards=[]
     for x in Path(loc).iterdir():
         if x.suffix == '.h':
             boards.append(x.stem)
+
+    loc = os.getenv('PICO_BOARD_HEADER_DIRS')
+
+    if loc != None:
+        for x in Path(loc).iterdir():
+            if x.suffix == '.h':
+                boards.append(x.stem)
 
     return boards
 
