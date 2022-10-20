@@ -11,7 +11,9 @@ It will also add example code for any features and optionally for some standard 
 Running `./pico_project.py --help` will give a list of the available command line parameters
 
 ```
-usage: pico_project.py [-h] [-t TSV] [-o OUTPUT] [-x] [-l] [-c] [-f FEATURE] [-over] [-b] [-g] [-p PROJECT] [-r] [-uart] [-usb] [name]
+usage: pico_project.py [-h] [-t TSV] [-o OUTPUT] [-x] [-l] [-c] [-f FEATURE] [-over] [-b] [-g] [-p PROJECT] [-r] [-uart] [-nouart] [-usb] [-cpp]
+                       [-cpprtti] [-cppex] [-d DEBUGGER] [-board BOARDTYPE] [-bl]
+                       [name]
 
 Pico Project generator
 
@@ -36,9 +38,17 @@ optional arguments:
   -r, --runFromRAM      Run the program from RAM rather than flash
   -uart, --uart         Console output to UART (default)
   -nouart, --nouart     Disable console output to UART
-  -usb, --usb           Console output to USB (disables other USB functionality)
-   cpp, --cpp           Generate C++ code
-  -d DEBUGGER, --debugger DEBUGGER   Select debugger (0 = SWD, 1 = PicoProbe)
+  -usb, --usb           Console output to USB (disables other USB functionality
+  -cpp, --cpp           Generate C++ code
+  -cpprtti, --cpprtti   Enable C++ RTTI (Uses more memory)
+  -cppex, --cppexceptions
+                        Enable C++ exceptions (Uses more memory)
+  -d DEBUGGER, --debugger DEBUGGER
+                        Select debugger (0 = SWD, 1 = PicoProbe)
+  -board BOARDTYPE, --boardtype BOARDTYPE
+                        Select board type (see --boardlist for available boards)
+  -bl, --boardlist      List available board types
+
 ```
 You can list the features supported by the tools by using `./pico_project.py --list`. These features can
 be added to the project using the `--feature` options, this can be used multiple times.
@@ -49,7 +59,16 @@ be added to the project using the `--feature` options, this can be used multiple
 
 The GUI version of the tool, run by adding `--gui` to the command line, uses `tkinter` to provide a platform agnostic script that will run on Linux, Mac and Windows. All the options from the command line tool are also supported in the GUI. It may be necessary to install the `python3-tk` package for GUI support on Ubuntu/Debian platforms.
 
+The board type selects the specific board header files to be used. The generator will scan the Pico SDK boards folder for all available boards.
+
 You can add specific features to your project by selecting them from the check boxes on the GUI. This will ensure the build system adds the appropriate code to the build, and also adds simple example code to the project showing how to use the feature. There are a number of options available, which provide the following functionality.
+
+Pico Wireless Options | Description
+----------------------|-----------
+None | Do not include any Pico W libraries
+Onboard LED | Only include a small library to provide access to the PicoW LED
+Polled lwIP | A polled lwIP implementation library
+Background lwIP | A library to run the lwIP stack in the background.
 
 Console Options | Description
 ----------------|-----------
@@ -62,6 +81,8 @@ Code Options | Description
 Add examples for Pico library | Example code will be generated for some of the standard library features that by default are in the build, for example, UART support and HW dividers.
 Run from RAM | Usually, the build creates a binary that will be installed to the flash memory. This forces the binary to work directly from RAM.
 Generate C++ | Any generated source files will use the .cpp extension.
+Enable C++ exceptions | By default exceptions are not support, check this to enable. There is an impact of speed and code size.
+Enable C++ RTTI | By default RTTI (Run Time type information) is not enabled, check this to enable. There is an impact of speed and code size.
 Advanced  | Brings up a table allowing selection of specific board build options. These options alter the way the features work, and should be used with caution.
 
 

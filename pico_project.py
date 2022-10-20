@@ -7,9 +7,12 @@
 #
 
 import argparse
+from copy import copy
 import os
+from pyexpat import features
 import shutil
 from pathlib import Path
+import string
 import sys
 import subprocess
 import platform
@@ -22,8 +25,10 @@ from tkinter import filedialog as fd
 from tkinter import simpledialog as sd
 from tkinter import ttk
 
-CMAKELIST_FILENAME='CMakeLists.txt'
-COMPILER_NAME='arm-none-eabi-gcc'
+CMAKELIST_FILENAME = 'CMakeLists.txt'
+CMAKECACHE_FILENAME = 'CMakeCache.txt'
+
+COMPILER_NAME = 'arm-none-eabi-gcc'
 
 VSCODE_LAUNCH_FILENAME = 'launch.json'
 VSCODE_C_PROPERTIES_FILENAME = 'c_cpp_properties.json'
@@ -37,27 +42,37 @@ CONFIG_UNSET="Not set"
 # And any more to string below, space separator
 STANDARD_LIBRARIES = 'pico_stdlib'
 
-# Indexed on feature name, tuple contains the C file, the H file and the Cmake project name for the feature
+# Indexed on feature name, tuple contains the C file, the H file and the CMake project name for the feature. 
+# Some lists may contain an extra/ancillary file needed for that feature
 GUI_TEXT = 0
 C_FILE = 1
 H_FILE = 2
 LIB_NAME = 3
+ANCILLARY_FILE = 4
 
 features_list = {
-    'spi' :     ("SPI",             "spi.c",            "hardware/spi.h",       "hardware_spi"),
-    'i2c' :     ("I2C interface",   "i2c.c",            "hardware/i2c.h",       "hardware_i2c"),
-    'dma' :     ("DMA support",     "dma.c",            "hardware/dma.h",       "hardware_dma"),
-    'pio' :     ("PIO interface",   "pio.c",            "hardware/pio.h",       "hardware_pio"),
-    'interp' :  ("HW interpolation", "interp.c",        "hardware/interp.h",    "hardware_interp"),
-    'timer' :   ("HW timer",        "timer.c",          "hardware/timer.h",     "hardware_timer"),
-    'watch' :   ("HW watchdog",     "watch.c",          "hardware/watchdog.h",  "hardware_watchdog"),
-    'clocks' :  ("HW clocks",       "clocks.c",         "hardware/clocks.h",    "hardware_clocks"),
+    'spi' :             ("SPI",             "spi.c",            "hardware/spi.h",       "hardware_spi"),
+    'i2c' :             ("I2C interface",   "i2c.c",            "hardware/i2c.h",       "hardware_i2c"),
+    'dma' :             ("DMA support",     "dma.c",            "hardware/dma.h",       "hardware_dma"),
+    'pio' :             ("PIO interface",   "pio.c",            "hardware/pio.h",       "hardware_pio"),
+    'interp' :          ("HW interpolation", "interp.c",        "hardware/interp.h",    "hardware_interp"),
+    'timer' :           ("HW timer",        "timer.c",          "hardware/timer.h",     "hardware_timer"),
+    'watch' :           ("HW watchdog",     "watch.c",          "hardware/watchdog.h",  "hardware_watchdog"),
+    'clocks' :          ("HW clocks",       "clocks.c",         "hardware/clocks.h",    "hardware_clocks"),
+}
+
+picow_options_list = {
+    'picow_none' :      ("None", "",                            "",    "",                                                                  ""),
+    'picow_led' :       ("PicoW onboard LED", "",               "pico/cyw43_arch.h",    "pico_cyw43_arch_none",                             ""),
+    'picow_poll' :      ("Polled lwIP",     "",                 "pico/cyw43_arch.h",    "pico_cyw43_arch_lwip_poll",                        "lwipopts.h"),
+    'picow_background' :("Background lwIP", "",                 "pico/cyw43_arch.h",    "pico_cyw43_arch_lwip_threadsafe_background",       "lwipopts.h"),
+#    'picow_freertos' :  ("Full lwIP (FreeRTOS)", "",            "pico/cyw43_arch.h",    "pico_cyw43_arch_lwip_sys_freertos",                "lwipopts.h"),
 }
 
 stdlib_examples_list = {
     'uart':     ("UART",                    "uart.c",           "hardware/uart.h",      "hardware_uart"),
     'gpio' :    ("GPIO interface",          "gpio.c",           "hardware/gpio.h",      "hardware_gpio"),
-    'div' :     ("Low level HW Divider",    "divider.c",  "hardware/divider.h",   "hardware_divider")
+    'div' :     ("Low level HW Divider",    "divider.c",        "hardware/divider.h",   "hardware_divider")
 }
 
 debugger_list = ["SWD", "PicoProbe"]
@@ -204,27 +219,6 @@ configuration_dictionary = list(dict())
 isMac = False
 isWindows = False
 
-class Parameters():
-    def __init__(self, sdkPath, projectRoot, projectName, gui, overwrite, build, features, projects,
-                 configs, runFromRAM, examples, uart, usb, cpp, debugger, exceptions, rtti):
-        self.sdkPath = sdkPath
-        self.projectRoot = projectRoot
-        self.projectName = projectName
-        self.wantGUI = gui
-        self.wantOverwrite = overwrite
-        self.wantBuild = build
-        self.features = features
-        self.projects = projects
-        self.configs = configs
-        self.wantRunFromRAM = runFromRAM
-        self.wantExamples = examples
-        self.wantUART = uart
-        self.wantUSB = usb
-        self.wantCPP = cpp
-        self.debugger = debugger
-        self.exceptions = exceptions
-        self.rtti = rtti
-
 def GetBackground():
     return 'white'
 
@@ -244,12 +238,17 @@ def RunGUI(sdkpath, args):
 
     ttk.Style().configure("TButton", padding=6, relief="groove", border=2, foreground=GetButtonTextColour(), background=GetButtonBackground())
     ttk.Style().configure("TLabel", foreground=GetTextColour(), background=GetBackground() )
-    ttk.Style().configure("TCheckbutton", foreground=GetTextColour(), background=GetBackground() )
+    ttk.Style().configure("TCheckbutton", foreground=GetTextColour(), background=GetBackground())
     ttk.Style().configure("TRadiobutton", foreground=GetTextColour(), background=GetBackground() )
     ttk.Style().configure("TLabelframe", foreground=GetTextColour(), background=GetBackground() )
     ttk.Style().configure("TLabelframe.Label", foreground=GetTextColour(), background=GetBackground() )
     ttk.Style().configure("TCombobox", foreground=GetTextColour(), background=GetBackground() )
     ttk.Style().configure("TListbox", foreground=GetTextColour(), background=GetBackground() )
+
+    ttk.Style().map("TCheckbutton", background = [('disabled', GetBackground())])
+    ttk.Style().map("TRadiobutton", background = [('disabled', GetBackground())])
+    ttk.Style().map("TButton", background = [('disabled', GetBackground())])
+    ttk.Style().map("TLabel", background = [('background', GetBackground())])
 
     app = ProjectWindow(root, sdkpath, args)
 
@@ -261,32 +260,6 @@ def RunGUI(sdkpath, args):
 def RunWarning(message):
     mb.showwarning('Raspberry Pi Pico Project Generator', message)
     sys.exit(0)
-
-
-class ChecklistBox(tk.Frame):
-    def __init__(self, parent, entries):
-        tk.Frame.__init__(self, parent)
-
-        self.vars = []
-        for c in entries:
-            # This var will be automatically updated by the checkbox
-            # The checkbox fills the var with the "onvalue" and "offvalue" as
-            # it is clicked on and off
-            var = tk.StringVar(value='') # Off by default for the moment
-            self.vars.append(var)
-            cb = ttk.Checkbutton(self, var=var, text=c,
-                                onvalue=c, offvalue="",
-                                width=20)
-            cb.pack(side="top", fill="x", anchor="w")
-
-    def getCheckedItems(self):
-        values = []
-        for var in self.vars:
-            value =  var.get()
-            if value:
-                values.append(value)
-        return values
-
 
 import threading
 
@@ -332,6 +305,7 @@ class DisplayWindow(tk.Toplevel):
         self.grab_set()
 
     def OK(self):
+        self.grab_release()
         self.destroy()
 
 def RunCommandInWindow(parent, command):
@@ -581,6 +555,38 @@ class ConfigurationWindow(tk.Toplevel):
     def get(self):
         return self.results
 
+class WirelessSettingsWindow(sd.Dialog):
+
+    def __init__(self, parent):
+        sd.Dialog.__init__(self, parent, "Wireless settings")
+        self.parent = parent
+
+    def body(self, master):
+        self.configure(background=GetBackground())
+        master.configure(background=GetBackground())
+        self.ssid = tk.StringVar()
+        self.password = tk.StringVar()
+
+        a = ttk.Label(master, text='SSID :', background=GetBackground())
+        a.grid(row=0, column=0, sticky=tk.E)
+        a.configure(background=GetBackground())
+        ttk.Entry(master, textvariable=self.ssid).grid(row=0, column=1, sticky=tk.W+tk.E, padx=5)
+
+        ttk.Label(master, text='Password :').grid(row=1, column=0, sticky=tk.E)
+        ttk.Entry(master, textvariable=self.password).grid(row=1, column=1, sticky=tk.W+tk.E, padx=5)
+
+        self.transient(self.parent)
+        self.grab_set()
+
+    def ok(self):
+        self.grab_release()
+        self.destroy()
+
+    def cancel(self):
+        self.destroy()
+
+    def get(self):
+        return (self.ssid.get(), self.password.get())
 
 # Our main window
 class ProjectWindow(tk.Frame):
@@ -591,18 +597,39 @@ class ProjectWindow(tk.Frame):
         self.sdkpath = sdkpath
         self.init_window(args)
         self.configs = dict()
+        self.ssid = str()
+        self.password = str()
+
+    def setState(self, thing, state):
+        for child in thing.winfo_children():
+            child.configure(state=state)
+
+    def boardtype_change_callback(self, event):
+        boardtype = self.boardtype.get()
+        if boardtype == "pico_w":
+            self.setState(self.picowSubframe, "enabled")
+        else:
+            self.setState(self.picowSubframe, "disabled")
+
+    def wirelessSettings(self):
+        result = WirelessSettingsWindow(self)
+        self.ssid, self.password = result.get()
 
     def init_window(self, args):
         self.master.title("Raspberry Pi Pico Project Generator")
         self.master.configure(bg=GetBackground())
 
-        mainFrame = tk.Frame(self, bg=GetBackground()).grid(row=0, column=0, columnspan=6, rowspan=12)
+        optionsRow = 0
+
+        mainFrame = tk.Frame(self, bg=GetBackground()).grid(row=optionsRow, column=0, columnspan=6, rowspan=12)
 
         # Need to keep a reference to the image or it will not appear.
         self.logo = tk.PhotoImage(file=GetFilePath("logo_alpha.gif"))
         logowidget = ttk.Label(mainFrame, image=self.logo, borderwidth=0, relief="solid").grid(row=0,column=0, columnspan=5, pady=10)
 
-        namelbl = ttk.Label(mainFrame, text='Project Name :').grid(row=2, column=0, sticky=tk.E)
+        optionsRow += 2
+
+        namelbl = ttk.Label(mainFrame, text='Project Name :').grid(row=optionsRow, column=0, sticky=tk.E)
         self.projectName = tk.StringVar()
 
         if args.name != None:
@@ -610,33 +637,68 @@ class ProjectWindow(tk.Frame):
         else:
             self.projectName.set('ProjectName')
 
-        nameEntry = ttk.Entry(mainFrame, textvariable=self.projectName).grid(row=2, column=1, sticky=tk.W+tk.E, padx=5)
+        nameEntry = ttk.Entry(mainFrame, textvariable=self.projectName).grid(row=optionsRow, column=1, sticky=tk.W+tk.E, padx=5)
 
-        locationlbl = ttk.Label(mainFrame, text='Location :').grid(row=3, column=0, sticky=tk.E)
+        optionsRow += 1
+
+        locationlbl = ttk.Label(mainFrame, text='Location :').grid(row=optionsRow, column=0, sticky=tk.E)
         self.locationName = tk.StringVar()
         self.locationName.set(os.getcwd())
-        locationEntry = ttk.Entry(mainFrame, textvariable=self.locationName).grid(row=3, column=1, columnspan=3, sticky=tk.W+tk.E, padx=5)
+        locationEntry = ttk.Entry(mainFrame, textvariable=self.locationName).grid(row=optionsRow, column=1, columnspan=3, sticky=tk.W+tk.E, padx=5)
         locationBrowse = ttk.Button(mainFrame, text='Browse', command=self.browse).grid(row=3, column=4)
+
+        optionsRow += 1
+
+        ttk.Label(mainFrame, text = "Board Type :").grid(row=optionsRow, column=0, padx=4, sticky=tk.E)
+        self.boardtype = ttk.Combobox(mainFrame, values=boardtype_list, )
+        self.boardtype.grid(row=4, column=1, padx=4, sticky=tk.W+tk.E)
+        self.boardtype.set('pico')
+        self.boardtype.bind('<<ComboboxSelected>>',self.boardtype_change_callback)
+        optionsRow += 1
 
         # Features section
         featuresframe = ttk.LabelFrame(mainFrame, text="Library Options", relief=tk.RIDGE, borderwidth=2)
-        featuresframe.grid(row=4, column=0, columnspan=5, rowspan=5, ipadx=5, padx=5, sticky=tk.E+tk.W)
+        featuresframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=5, ipadx=5, padx=5, pady=5, sticky=tk.E+tk.W)
 
-        # Add features to the list
-        v = []
+        s = (len(features_list)/3)
+
+        self.feature_checkbox_vars = []
+        row = 0
+        col = 0
         for i in features_list:
-            v.append(features_list[i][GUI_TEXT])
+            var = tk.StringVar(value='') # Off by default for the moment
+            c = features_list[i][GUI_TEXT]
+            cb = ttk.Checkbutton(featuresframe, text = c, var=var, onvalue=i, offvalue='')
+            cb.grid(row=row, column=col, padx=15, pady=2, ipadx=1, ipady=1, sticky=tk.E+tk.W)
+            self.feature_checkbox_vars.append(var)
+            row+=1
+            if row >= s:
+                col+=1
+                row = 0
 
-        s = (len(v)//3) + 1
+        optionsRow += 5
 
-        self.featuresEntry0 = ChecklistBox(featuresframe, v[:s])
-        self.featuresEntry0.grid(row=5, column=1, padx=4)
-        self.featuresEntry1 = ChecklistBox(featuresframe, v[s:s+s])
-        self.featuresEntry1.grid(row=5, column=2, padx=4)
-        self.featuresEntry2 = ChecklistBox(featuresframe, v[s+s:])
-        self.featuresEntry2.grid(row=5, column=3, padx=4)
+        # PicoW options section
+        self.picowSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="Pico Wireless Options")
+        self.picowSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
+        self.pico_wireless = tk.StringVar()
 
-        optionsRow = 9
+        col = 0
+        row = 0
+        for i in picow_options_list:
+            rb = ttk.Radiobutton(self.picowSubframe, text=picow_options_list[i][GUI_TEXT], variable=self.pico_wireless, val=i)
+            rb.grid(row=row, column=col,  padx=15, pady=1, sticky=tk.E+tk.W)
+            col+=1
+            if col == 3:
+                col=0
+                row+=1
+
+        # DOnt actually need any settings at the moment.
+        # ttk.Button(self.picowSubframe, text='Settings', command=self.wirelessSettings).grid(row=0, column=4, padx=5, pady=2, sticky=tk.E)
+
+        self.setState(self.picowSubframe, "disabled")
+
+        optionsRow += 3
 
         # output options section
         ooptionsSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="Console Options")
@@ -691,7 +753,7 @@ class ProjectWindow(tk.Frame):
 
         self.wantOverwrite = tk.IntVar()
         self.wantOverwrite.set(args.overwrite)
-        ttk.Checkbutton(boptionsSubframe, text="Overwrite project if it already exists", variable=self.wantOverwrite).grid(row=0, column=1, padx=4, sticky=tk.W)
+        ttk.Checkbutton(boptionsSubframe, text="Overwrite existing projects", variable=self.wantOverwrite).grid(row=0, column=1, padx=4, sticky=tk.W)
 
         optionsRow += 2
         
@@ -729,13 +791,16 @@ class ProjectWindow(tk.Frame):
     def GetFeatures(self):
         features = []
 
-        f = self.featuresEntry0.getCheckedItems()
-        f += self.featuresEntry1.getCheckedItems()
-        f += self.featuresEntry2.getCheckedItems()
+        i = 0
+        for cb in self.feature_checkbox_vars:
+            s = cb.get()
+            if s != '':
+                features.append(s)
 
-        for feat in features_list:
-            if features_list[feat][GUI_TEXT] in f :
-                features.append(feat)
+        picow_extra = self.pico_wireless.get()
+
+        if picow_extra != 'picow_none':
+            features.append(picow_extra)
 
         return features
 
@@ -751,13 +816,30 @@ class ProjectWindow(tk.Frame):
         if (self.wantVSCode.get()):
             projects.append("vscode")
 
-        p = Parameters(sdkPath=self.sdkpath, projectRoot=Path(projectPath), projectName=self.projectName.get(),
-                       gui=True, overwrite=self.wantOverwrite.get(), build=self.wantBuild.get(),
-                       features=features, projects=projects, configs=self.configs, runFromRAM=self.wantRunFromRAM.get(),
-                       examples=self.wantExamples.get(), uart=self.wantUART.get(), usb=self.wantUSB.get(), cpp=self.wantCPP.get(),
-                       debugger=self.debugger.current(), exceptions=self.wantCPPExceptions.get(), rtti=self.wantCPPRTTI.get())
+        params={
+                'sdkPath'       : self.sdkpath,
+                'projectRoot'   : Path(projectPath),
+                'projectName'   : self.projectName.get(),
+                'wantGUI'       : True,
+                'wantOverwrite' : self.wantOverwrite.get(),
+                'wantBuild'     : self.wantBuild.get(),
+                'boardtype'     : self.boardtype.get(),
+                'features'      : features,
+                'projects'      : projects,
+                'configs'       : self.configs,
+                'wantRunFromRAM': self.wantRunFromRAM.get(),
+                'wantExamples'  : self.wantExamples.get(),
+                'wantUART'      : self.wantUART.get(),
+                'wantUSB'       : self.wantUSB.get(),
+                'wantCPP'       : self.wantCPP.get(),
+                'debugger'      : self.debugger.current(),
+                'exceptions'    : self.wantCPPExceptions.get(),
+                'rtti'          : self.wantCPPRTTI.get(),
+                'ssid'          : self.ssid,
+                'password'      : self.password,
+                }
 
-        DoEverything(self, p)
+        DoEverything(self, params)
 
     def browse(self):
         name = fd.askdirectory()
@@ -827,6 +909,8 @@ def ParseCommandLine():
     parser.add_argument("-cpprtti", "--cpprtti", action='store_true', default=0, help="Enable C++ RTTI (Uses more memory)")
     parser.add_argument("-cppex", "--cppexceptions", action='store_true', default=0, help="Enable C++ exceptions (Uses more memory)")
     parser.add_argument("-d", "--debugger", type=int, help="Select debugger ({})".format(debugger_flags), default=0)
+    parser.add_argument("-board", "--boardtype", action="append", default='pico', help="Select board type (see --boardlist for available boards)")
+    parser.add_argument("-bl", "--boardlist", action="store_true", help="List available board types")
 
     return parser.parse_args()
 
@@ -854,6 +938,9 @@ def GenerateMain(folder, projectName, features, cpp):
                 file.write(o)
             if (feat in stdlib_examples_list):
                 o = '#include "' +  stdlib_examples_list[feat][H_FILE] + '"\n'
+                file.write(o)
+            if (feat in picow_options_list):
+                o = '#include "' +  picow_options_list[feat][H_FILE] + '"\n'
                 file.write(o)
 
         file.write('\n')
@@ -905,6 +992,9 @@ def GenerateCMake(folder, params):
 
     cmake_header2 = ("# Pull in Raspberry Pi Pico SDK (must be before project)\n"
                 "include(pico_sdk_import.cmake)\n\n"
+                 "if (PICO_SDK_VERSION_STRING VERSION_LESS \"1.4.0\")\n"
+                 "  message(FATAL_ERROR \"Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}\")\n"
+                 "endif()\n\n"
                 )
 
     cmake_header3 = (
@@ -913,8 +1003,8 @@ def GenerateCMake(folder, params):
                 "# Add executable. Default name is the project name, version 0.1\n\n"
                 )
 
-
     filename = Path(folder) / CMAKELIST_FILENAME
+    projectName = params['projectName']
 
     file = open(filename, 'w')
 
@@ -923,25 +1013,27 @@ def GenerateCMake(folder, params):
     # OK, for the path, CMake will accept forward slashes on Windows, and thats
     # seemingly a bit easier to handle than the backslashes
 
-    p = str(params.sdkPath).replace('\\','/')
+    p = str(params['sdkPath']).replace('\\','/')
     p = '\"' + p + '\"'
 
     file.write('set(PICO_SDK_PATH ' + p + ')\n\n')
-    file.write(cmake_header2)
-    file.write('project(' + params.projectName + ' C CXX ASM)\n')
+    file.write('set(PICO_BOARD ' + params['boardtype'] + ' CACHE STRING "Board type")\n\n')
 
-    if params.exceptions:
+    file.write(cmake_header2)
+    file.write('project(' + projectName + ' C CXX ASM)\n')
+
+    if params['exceptions']:
         file.write("\nset(PICO_CXX_ENABLE_EXCEPTIONS 1)\n")
 
-    if params.rtti:
+    if params['rtti']:
         file.write("\nset(PICO_CXX_ENABLE_RTTI 1)\n")
 
     file.write(cmake_header3)
 
     # add the preprocessor defines for overall configuration
-    if params.configs:
+    if params['configs']:
         file.write('# Add any PICO_CONFIG entries specified in the Advanced settings\n')
-        for c, v in params.configs.items():
+        for c, v in params['configs'].items():
             if v == "True":
                 v = "1"
             elif v == "False":
@@ -950,46 +1042,74 @@ def GenerateCMake(folder, params):
         file.write('\n')
 
     # No GUI/command line to set a different executable name at this stage
-    executableName = params.projectName
+    executableName = projectName
 
-    if params.wantCPP:
-        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.cpp )\n\n')
+    if params['wantCPP']:
+        file.write('add_executable(' + projectName + ' ' + projectName + '.cpp )\n\n')
     else:
-        file.write('add_executable(' + params.projectName + ' ' + params.projectName + '.c )\n\n')
+        file.write('add_executable(' + projectName + ' ' + projectName + '.c )\n\n')
 
-    file.write('pico_set_program_name(' + params.projectName + ' "' + executableName + '")\n')
-    file.write('pico_set_program_version(' + params.projectName + ' "0.1")\n\n')
+    file.write('pico_set_program_name(' + projectName + ' "' + executableName + '")\n')
+    file.write('pico_set_program_version(' + projectName + ' "0.1")\n\n')
 
-    if params.wantRunFromRAM:
+    if params['wantRunFromRAM']:
         file.write('# no_flash means the target is to run from RAM\n')
-        file.write('pico_set_binary_type(' + params.projectName + ' no_flash)\n\n')
+        file.write('pico_set_binary_type(' + projectName + ' no_flash)\n\n')
 
     # Console output destinations
-    if params.wantUART:
-        file.write('pico_enable_stdio_uart(' + params.projectName + ' 1)\n')
+    if params['wantUART']:
+        file.write('pico_enable_stdio_uart(' + projectName + ' 1)\n')
     else:
-        file.write('pico_enable_stdio_uart(' + params.projectName + ' 0)\n')
+        file.write('pico_enable_stdio_uart(' + projectName + ' 0)\n')
 
-    if params.wantUSB:
-        file.write('pico_enable_stdio_usb(' + params.projectName + ' 1)\n\n')
+    if params['wantUSB']:
+        file.write('pico_enable_stdio_usb(' + projectName + ' 1)\n\n')
     else:
-        file.write('pico_enable_stdio_usb(' + params.projectName + ' 0)\n\n')
+        file.write('pico_enable_stdio_usb(' + projectName + ' 0)\n\n')
+
+    # If we need wireless, check for SSID and password
+    # removed for the moment as these settings are currently only needed for the pico-examples
+    # but may be requried in here at a later date.
+    if False:
+        if 'ssid' in params or 'password' in params:
+            file.write('# Add any wireless access point information\n')
+            file.write('target_compile_definitions(' + projectName + ' PRIVATE\n')
+            if 'ssid' in params:
+                file.write('WIFI_SSID=\"' + params['ssid'] + '\"\n')
+            else:
+                file.write('WIFI_SSID=\"${WIFI_SSID}\"')
+
+            if 'password' in params:
+                file.write('WIFI_PASSWORD=\"' + params['password'] + '\"\n')
+            else:
+                file.write('WIFI_PASSWORD=\"${WIFI_PASSWORD}\"')
+            file.write(')\n\n')
 
     # Standard libraries
     file.write('# Add the standard library to the build\n')
-    file.write('target_link_libraries(' + params.projectName + ' ' + STANDARD_LIBRARIES + ')\n\n')
+    file.write('target_link_libraries(' + projectName + '\n')
+    file.write("        " + STANDARD_LIBRARIES)
+    file.write(')\n\n')
 
+    # Standard include directories
+    file.write('# Add the standard include files to the build\n')
+    file.write('target_include_directories(' + projectName + ' PRIVATE\n')
+    file.write("  ${CMAKE_CURRENT_LIST_DIR}\n")
+    file.write("  ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required\n")
+    file.write(')\n\n')
 
     # Selected libraries/features
-    if (params.features):
+    if (params['features']):
         file.write('# Add any user requested libraries\n')
-        file.write('target_link_libraries(' + params.projectName + '\n')
-        for feat in params.features:
+        file.write('target_link_libraries(' + projectName + '\n')
+        for feat in params['features']:
             if (feat in features_list):
                 file.write("        " + features_list[feat][LIB_NAME] + '\n')
+            if (feat in picow_options_list):
+                file.write("        " + picow_options_list[feat][LIB_NAME] + '\n')
         file.write('        )\n\n')
 
-    file.write('pico_add_extra_outputs(' + params.projectName + ')\n\n')
+    file.write('pico_add_extra_outputs(' + projectName + ')\n\n')
 
     file.close()
 
@@ -1003,7 +1123,6 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
 
     deb = debugger_config_list[debugger]
 
-   # if debugger==0 else 'picoprobe.cfg
     for p in projects :
         if p == 'vscode':
             v1 = ('{\n'
@@ -1119,10 +1238,22 @@ def LoadConfigurations():
     except:
         print("No Pico configurations file found. Continuing without")
 
+def LoadBoardTypes(sdkPath):
+    # Scan the boards folder for all header files, extract filenames, and make a list of the results
+    # folder is <PICO_SDK_PATH>/src/boards/include/boards/*
+
+    loc = sdkPath / "src/boards/include/boards"
+    boards=[]
+    for x in Path(loc).iterdir():
+        if x.suffix == '.h':
+            boards.append(x.stem)
+
+    return boards
+
 def DoEverything(parent, params):
 
-    if not os.path.exists(params.projectRoot):
-        if params.wantGUI:
+    if not os.path.exists(params['projectRoot']):
+        if params['wantGUI']:
             mb.showerror('Raspberry Pi Pico Project Generator', 'Invalid project path. Select a valid path and try again')
             return
         else:
@@ -1130,20 +1261,20 @@ def DoEverything(parent, params):
             sys.exit(-1)
 
     oldCWD = os.getcwd()
-    os.chdir(params.projectRoot)
+    os.chdir(params['projectRoot'])
 
     # Create our project folder as subfolder
-    os.makedirs(params.projectName, exist_ok=True)
+    os.makedirs(params['projectName'], exist_ok=True)
 
-    os.chdir(params.projectName)
+    os.chdir(params['projectName'])
 
-    projectPath = params.projectRoot / params.projectName
+    projectPath = params['projectRoot'] / params['projectName']
 
     # First check if there is already a project in the folder
     # If there is we abort unless the overwrite flag it set
     if os.path.exists(CMAKELIST_FILENAME):
-        if not params.wantOverwrite :
-            if params.wantGUI:
+        if not params['wantOverwrite'] :
+            if params['wantGUI']:
                 # We can ask the user if they want to overwrite
                 y = mb.askquestion('Raspberry Pi Pico Project Generator', 'There already appears to be a project in this folder. \nPress Yes to overwrite project files, or Cancel to chose another folder')
                 if y != 'yes':
@@ -1160,25 +1291,38 @@ def DoEverything(parent, params):
 
     # Copy the SDK finder cmake file to our project folder
     # Can be found here <PICO_SDK_PATH>/external/pico_sdk_import.cmake
-    shutil.copyfile(params.sdkPath / 'external' / 'pico_sdk_import.cmake', projectPath / 'pico_sdk_import.cmake' )
+    shutil.copyfile(params['sdkPath'] / 'external' / 'pico_sdk_import.cmake', projectPath / 'pico_sdk_import.cmake' )
 
-    if params.features:
-        features_and_examples = params.features[:]
+    if params['features']:
+        features_and_examples = params['features'][:]
     else:
         features_and_examples= []
 
-    if params.wantExamples:
+    if params['wantExamples']:
         features_and_examples = list(stdlib_examples_list.keys()) + features_and_examples
 
-    GenerateMain('.', params.projectName, features_and_examples, params.wantCPP)
+    GenerateMain('.', params['projectName'], features_and_examples, params['wantCPP'])
 
     GenerateCMake('.', params)
+
+    # If we have any ancilliary files, copy them to our project folder
+    # Currently only the picow with lwIP support needs an extra file, so just check that list
+    for feat in features_and_examples:
+        if feat in picow_options_list:
+            if picow_options_list[feat][ANCILLARY_FILE] != "":
+                shutil.copy(sourcefolder + "/" + picow_options_list[feat][ANCILLARY_FILE], projectPath / picow_options_list[feat][ANCILLARY_FILE])
 
     # Create a build folder, and run our cmake project build from it
     if not os.path.exists('build'):
         os.mkdir('build')
 
     os.chdir('build')
+
+    # If we are overwriting a previous project, we should probably clear the folder, but that might delete something the users thinks is important, so
+    # for the moment, just delete the CMakeCache.txt file as certain changes may need that to be recreated.
+
+    if os.path.exists(CMAKECACHE_FILENAME):
+        os.remove(CMAKECACHE_FILENAME)
 
     cpus = os.cpu_count()
     if cpus == None:
@@ -1191,16 +1335,16 @@ def DoEverything(parent, params):
         cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug ..'
         makeCmd = 'make -j' + str(cpus)
 
-    if params.wantGUI:
+    if params['wantGUI']:
         RunCommandInWindow(parent, cmakeCmd)
     else:
         os.system(cmakeCmd)
 
-    if params.projects:
-        generateProjectFiles(projectPath, params.projectName, params.sdkPath, params.projects, params.debugger)
+    if params['projects']:
+        generateProjectFiles(projectPath, params['projectName'], params['sdkPath'], params['projects'], params['debugger'])
 
-    if params.wantBuild:
-        if params.wantGUI:
+    if params['wantBuild']:
+        if params['wantGUI']:
             RunCommandInWindow(parent, makeCmd)
         else:
             os.system(makeCmd)
@@ -1211,6 +1355,8 @@ def DoEverything(parent, params):
 
 ###################################################################################
 # main execution starteth here
+
+sourcefolder = os.path.dirname(os.path.abspath(__file__))
 
 args = ParseCommandLine()
 
@@ -1236,7 +1382,7 @@ if c == None:
         print(m)
     sys.exit(-1)
 
-if args.name == None and not args.gui and not args.list and not args.configs:
+if args.name == None and not args.gui and not args.list and not args.configs and not args.boardlist:
     print("No project name specfied\n")
     sys.exit(-1)
 
@@ -1250,12 +1396,15 @@ if p == None:
 
 sdkPath = Path(p)
 
+boardtype_list = LoadBoardTypes(sdkPath)
+boardtype_list.sort()
+
 if args.gui:
     RunGUI(sdkPath, args) # does not return, only exits
 
 projectRoot = Path(os.getcwd())
 
-if args.list or args.configs:
+if args.list or args.configs or args.boardlist:
     if args.list:
         print("Available project features:\n")
         for feat in features_list:
@@ -1268,11 +1417,35 @@ if args.list or args.configs:
             print(conf['name'].ljust(40), '\t', conf['description'])
         print('\n')
 
+    if args.boardlist:
+        print("Available board types:\n")
+        for board in boardtype_list:
+            print(board)
+        print('\n')
+
     sys.exit(0)
 else :
-    p = Parameters(sdkPath=sdkPath, projectRoot=projectRoot, projectName=args.name,
-                   gui=False, overwrite=args.overwrite, build=args.build, features=args.feature,
-                   projects=args.project, configs=(), runFromRAM=args.runFromRAM,
-                   examples=args.examples, uart=args.uart, usb=args.usb, cpp=args.cpp, debugger=args.debugger, exceptions=args.cppexceptions, rtti=args.cpprtti)
+    params={
+        'sdkPath'       : sdkPath,
+        'projectRoot'   : projectRoot,
+        'projectName'   : args.name,
+        'wantGUI'       : False,
+        'wantOverwrite' : args.overwrite,
+        'boardtype'     : args.boardtype,
+        'wantBuild'     : args.build,
+        'features'      : args.feature,
+        'projects'      : args.project,
+        'configs'       : (),
+        'wantRunFromRAM': args.runFromRAM,
+        'wantExamples'  : args.examples,
+        'wantUART'      : args.uart,
+        'wantUSB'       : args.usb,
+        'wantCPP'       : args.cpp,
+        'debugger'      : args.debugger,
+        'exceptions'    : args.cppexceptions,
+        'rtti'          : args.cpprtti,
+        'ssid'          : '',
+        'password'      : '',
+        }
 
-    DoEverything(None, p)
+    DoEverything(None, params)
