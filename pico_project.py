@@ -993,7 +993,7 @@ def GenerateCMake(folder, params):
     cmake_header2 = ("# Pull in Raspberry Pi Pico SDK (must be before project)\n"
                 "include(pico_sdk_import.cmake)\n\n"
                  "if (PICO_SDK_VERSION_STRING VERSION_LESS \"1.4.0\")\n"
-                 "  message(FATAL_ERROR \"Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}\")\n"
+                 "  message(FATAL_ERROR \"Raspberry Pi Pico SDK version 1.4.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}\")\n"
                  "endif()\n\n"
                 )
 
