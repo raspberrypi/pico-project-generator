@@ -1339,8 +1339,16 @@ def DoEverything(parent, params):
         cpus = 1
 
     if isWindows:
-        cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" ..'
-        makeCmd = 'nmake '
+        # Had a special case report, when using MinGW, need to check if using nmake or mingw32-make.
+        if shutil.which("mingw32-make"):
+            # Assume MinGW environment
+            cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" ..'
+            makeCmd = 'mingw32-make '
+
+        else:
+            # Everything else assume nmake
+            cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" ..'
+            makeCmd = 'nmake '
     else:
         cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug ..'
         makeCmd = 'make -j' + str(cpus)
