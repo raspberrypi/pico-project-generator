@@ -48,6 +48,7 @@ optional arguments:
   -board BOARDTYPE, --boardtype BOARDTYPE
                         Select board type (see --boardlist for available boards)
   -bl, --boardlist      List available board types
+  -cp, --cpath          Override default VSCode compiler path
 
 ```
 You can list the features supported by the tools by using `./pico_project.py --list`. These features can
