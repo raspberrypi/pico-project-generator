@@ -909,7 +909,7 @@ def ParseCommandLine():
     parser.add_argument("-cpprtti", "--cpprtti", action='store_true', default=0, help="Enable C++ RTTI (Uses more memory)")
     parser.add_argument("-cppex", "--cppexceptions", action='store_true', default=0, help="Enable C++ exceptions (Uses more memory)")
     parser.add_argument("-d", "--debugger", type=int, help="Select debugger ({})".format(debugger_flags), default=0)
-    parser.add_argument("-board", "--boardtype", action="append", default='pico', help="Select board type (see --boardlist for available boards)")
+    parser.add_argument("-board", "--boardtype", action="store", default='pico', help="Select board type (see --boardlist for available boards)")
     parser.add_argument("-bl", "--boardlist", action="store_true", help="List available board types")
 
     return parser.parse_args()
