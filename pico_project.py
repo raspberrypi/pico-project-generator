@@ -218,6 +218,7 @@ configuration_dictionary = list(dict())
 
 isMac = False
 isWindows = False
+compilerPath = Path("/usr/bin/arm-none-eabi-gcc")
 
 def GetBackground():
     return 'white'
@@ -911,6 +912,7 @@ def ParseCommandLine():
     parser.add_argument("-d", "--debugger", type=int, help="Select debugger ({})".format(debugger_flags), default=0)
     parser.add_argument("-board", "--boardtype", action="store", default='pico', help="Select board type (see --boardlist for available boards)")
     parser.add_argument("-bl", "--boardlist", action="store_true", help="List available board types")
+    parser.add_argument("-cp", "--cpath", help="Override default VSCode compiler path")
 
     return parser.parse_args()
 
@@ -1164,7 +1166,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '        "${env:PICO_SDK_PATH}/**"\n'
                   '      ],\n'
                   '      "defines": [],\n'
-                  '      "compilerPath": "/usr/bin/arm-none-eabi-gcc",\n'
+                  f'      "compilerPath": {compilerPath},\n'
                   '      "cStandard": "gnu17",\n'
                   '      "cppStandard": "gnu++14",\n'
                   '      "intelliSenseMode": "linux-gcc-arm",\n'
@@ -1393,6 +1395,12 @@ if c == None:
 if args.name == None and not args.gui and not args.list and not args.configs and not args.boardlist:
     print("No project name specfied\n")
     sys.exit(-1)
+
+# Check if we were provided a compiler path, and override the default if so
+if args.cpath:
+    compilerPath = Path(args.cpath)
+else:
+    compilerPath = Path(c)
 
 # load/parse any configuration dictionary we may have
 LoadConfigurations()
