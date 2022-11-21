@@ -1166,7 +1166,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '        "${env:PICO_SDK_PATH}/**"\n'
                   '      ],\n'
                   '      "defines": [],\n'
-                  f'      "compilerPath": {compilerPath},\n'
+                  f'      "compilerPath": "{compilerPath}",\n'
                   '      "cStandard": "gnu17",\n'
                   '      "cppStandard": "gnu++14",\n'
                   '      "intelliSenseMode": "linux-gcc-arm",\n'
