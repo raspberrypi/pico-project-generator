@@ -1,0 +1,73 @@
+The system is: Windows - 10.0.19045 - AMD64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.29.30133/bin/Hostx86/x86/cl.exe 
+Build flags: 
+Id flags:  
+
+The output was:
+0
+Compilateur d'optimisation Microsoft (R) C/C++ version 19.29.30147 pour x86
+Copyright (C) Microsoft Corporation. Tous droits réservés.
+
+CMakeCCompilerId.c
+Microsoft (R) Incremental Linker Version 14.29.30147.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:CMakeCCompilerId.exe 
+CMakeCCompilerId.obj 
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.exe"
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.obj"
+
+The C compiler identification is MSVC, found in "C:/Users/Vincent/Documents/Pico/pico-project-generator/build/elf2uf2/CMakeFiles/3.25.0/CompilerIdC/CMakeCCompilerId.exe"
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler: C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.29.30133/bin/Hostx86/x86/cl.exe 
+Build flags: 
+Id flags:  
+
+The output was:
+0
+Compilateur d'optimisation Microsoft (R) C/C++ version 19.29.30147 pour x86
+Copyright (C) Microsoft Corporation. Tous droits réservés.
+
+CMakeCXXCompilerId.cpp
+Microsoft (R) Incremental Linker Version 14.29.30147.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:CMakeCXXCompilerId.exe 
+CMakeCXXCompilerId.obj 
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.exe"
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.obj"
+
+The CXX compiler identification is MSVC, found in "C:/Users/Vincent/Documents/Pico/pico-project-generator/build/elf2uf2/CMakeFiles/3.25.0/CompilerIdCXX/CMakeCXXCompilerId.exe"
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: C:/Users/Vincent/Documents/Pico/pico-project-generator/build/elf2uf2/CMakeFiles/CMakeScratch/TryCompile-i4r7x2
+
+Run Build Command(s):nmake -f Makefile /nologo cmTC_e6317\fast && 	"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\bin\HostX86\x86\nmake.exe"  -f CMakeFiles\cmTC_e6317.dir\build.make /nologo -L                  CMakeFiles\cmTC_e6317.dir\build
+Building C object CMakeFiles/cmTC_e6317.dir/CMakeCCompilerABI.c.obj
+	"C:\Program Files\CMake\bin\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\cmTC_e6317.dir\CMakeCCompilerABI.c.obj.d --working-dir=C:\Users\Vincent\Documents\Pico\pico-project-generator\build\elf2uf2\CMakeFiles\CMakeScratch\TryCompile-i4r7x2 --filter-prefix="Remarqueá: inclusion du fichierá:  " -- C:\PROGRA~2\MICROS~3\2019\BUILDT~1\VC\Tools\MSVC\1429~1.301\bin\Hostx86\x86\cl.exe @C:\Users\Vincent\AppData\Local\Temp\nmE39.tmp
+CMakeCCompilerABI.c
+Linking C executable cmTC_e6317.exe
+	"C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\cmTC_e6317.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100190~1.0\x86\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100190~1.0\x86\mt.exe --manifests -- C:\PROGRA~2\MICROS~3\2019\BUILDT~1\VC\Tools\MSVC\1429~1.301\bin\Hostx86\x86\link.exe /nologo @CMakeFiles\cmTC_e6317.dir\objects1 @C:\Users\Vincent\AppData\Local\Temp\nmFB1.tmp
+
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: C:/Users/Vincent/Documents/Pico/pico-project-generator/build/elf2uf2/CMakeFiles/CMakeScratch/TryCompile-o1n1zo
+
+Run Build Command(s):nmake -f Makefile /nologo cmTC_438fa\fast && 	"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\bin\HostX86\x86\nmake.exe"  -f CMakeFiles\cmTC_438fa.dir\build.make /nologo -L                  CMakeFiles\cmTC_438fa.dir\build
+Building CXX object CMakeFiles/cmTC_438fa.dir/CMakeCXXCompilerABI.cpp.obj
+	"C:\Program Files\CMake\bin\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\cmTC_438fa.dir\CMakeCXXCompilerABI.cpp.obj.d --working-dir=C:\Users\Vincent\Documents\Pico\pico-project-generator\build\elf2uf2\CMakeFiles\CMakeScratch\TryCompile-o1n1zo --filter-prefix="Remarqueá: inclusion du fichierá:  " -- C:\PROGRA~2\MICROS~3\2019\BUILDT~1\VC\Tools\MSVC\1429~1.301\bin\Hostx86\x86\cl.exe @C:\Users\Vincent\AppData\Local\Temp\nm11C3.tmp
+CMakeCXXCompilerABI.cpp
+Linking CXX executable cmTC_438fa.exe
+	"C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\cmTC_438fa.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100190~1.0\x86\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100190~1.0\x86\mt.exe --manifests -- C:\PROGRA~2\MICROS~3\2019\BUILDT~1\VC\Tools\MSVC\1429~1.301\bin\Hostx86\x86\link.exe /nologo @CMakeFiles\cmTC_438fa.dir\objects1 @C:\Users\Vincent\AppData\Local\Temp\nm1222.tmp
+
+
+
