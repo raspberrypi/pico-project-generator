@@ -936,13 +936,13 @@ def GenerateMain(folder, projectName, features, cpp):
         # Add any includes
         for feat in features:
             if (feat in features_list):
-                o = '#include "' +  features_list[feat][H_FILE] + '"\n'
+                o = f'#include "{features_list[feat][H_FILE]}"\n'
                 file.write(o)
             if (feat in stdlib_examples_list):
-                o = '#include "' +  stdlib_examples_list[feat][H_FILE] + '"\n'
+                o = f'#include "{stdlib_examples_list[feat][H_FILE]}"\n'
                 file.write(o)
             if (feat in picow_options_list):
-                o = '#include "' +  picow_options_list[feat][H_FILE] + '"\n'
+                o = f'#include "{picow_options_list[feat][H_FILE]}"\n'
                 file.write(o)
 
         file.write('\n')
@@ -983,46 +983,42 @@ def GenerateMain(folder, projectName, features, cpp):
 
 
 def GenerateCMake(folder, params):
+   
+    filename = Path(folder) / CMAKELIST_FILENAME
+    projectName = params['projectName']
+    board_type = params['boardtype']
 
-    cmake_header1 = ("# Generated Cmake Pico project file\n\n"
+    # OK, for the path, CMake will accept forward slashes on Windows, and thats
+    # seemingly a bit easier to handle than the backslashes
+    p = str(params['sdkPath']).replace('\\','/')
+    sdk_path = f'"{p}"'
+
+    cmake_header1 = (f"# Generated Cmake Pico project file\n\n"
                  "cmake_minimum_required(VERSION 3.13)\n\n"
                  "set(CMAKE_C_STANDARD 11)\n"
                  "set(CMAKE_CXX_STANDARD 17)\n\n"
                  "# Initialise pico_sdk from installed location\n"
                  "# (note this can come from environment, CMake cache etc)\n"
-                )
-
-    cmake_header2 = ("# Pull in Raspberry Pi Pico SDK (must be before project)\n"
-                "include(pico_sdk_import.cmake)\n\n"
+                 f"set(PICO_SDK_PATH {sdk_path})\n\n"
+                 f"set(PICO_BOARD {board_type} CACHE STRING \"Board type\")\n\n"
+                 "# Pull in Raspberry Pi Pico SDK (must be before project)\n"
+                 "include(pico_sdk_import.cmake)\n\n"
                  "if (PICO_SDK_VERSION_STRING VERSION_LESS \"1.4.0\")\n"
                  "  message(FATAL_ERROR \"Raspberry Pi Pico SDK version 1.4.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}\")\n"
                  "endif()\n\n"
+                 f"project({projectName} C CXX ASM)\n"
                 )
-
+    
     cmake_header3 = (
                 "\n# Initialise the Raspberry Pi Pico SDK\n"
                 "pico_sdk_init()\n\n"
                 "# Add executable. Default name is the project name, version 0.1\n\n"
                 )
 
-    filename = Path(folder) / CMAKELIST_FILENAME
-    projectName = params['projectName']
 
     file = open(filename, 'w')
 
     file.write(cmake_header1)
-
-    # OK, for the path, CMake will accept forward slashes on Windows, and thats
-    # seemingly a bit easier to handle than the backslashes
-
-    p = str(params['sdkPath']).replace('\\','/')
-    p = '\"' + p + '\"'
-
-    file.write('set(PICO_SDK_PATH ' + p + ')\n\n')
-    file.write('set(PICO_BOARD ' + params['boardtype'] + ' CACHE STRING "Board type")\n\n')
-
-    file.write(cmake_header2)
-    file.write('project(' + projectName + ' C CXX ASM)\n')
 
     if params['exceptions']:
         file.write("\nset(PICO_CXX_ENABLE_EXCEPTIONS 1)\n")
@@ -1040,62 +1036,62 @@ def GenerateCMake(folder, params):
                 v = "1"
             elif v == "False":
                 v = "0"
-            file.write('add_compile_definitions(' + c + '=' + v + ')\n')
+            file.write(f'add_compile_definitions({c} = {v})\n')
         file.write('\n')
 
     # No GUI/command line to set a different executable name at this stage
     executableName = projectName
 
     if params['wantCPP']:
-        file.write('add_executable(' + projectName + ' ' + projectName + '.cpp )\n\n')
+        file.write(f'add_executable({projectName} {projectName}.cpp )\n\n')
     else:
-        file.write('add_executable(' + projectName + ' ' + projectName + '.c )\n\n')
+        file.write(f'add_executable({projectName} {projectName}.c )\n\n')
 
-    file.write('pico_set_program_name(' + projectName + ' "' + executableName + '")\n')
-    file.write('pico_set_program_version(' + projectName + ' "0.1")\n\n')
+    file.write(f'pico_set_program_name({projectName} "{executableName}")\n')
+    file.write(f'pico_set_program_version({projectName} "0.1")\n\n')
 
     if params['wantRunFromRAM']:
-        file.write('# no_flash means the target is to run from RAM\n')
-        file.write('pico_set_binary_type(' + projectName + ' no_flash)\n\n')
+        file.write(f'# no_flash means the target is to run from RAM\n')
+        file.write(f'pico_set_binary_type({projectName} no_flash)\n\n')
 
     # Console output destinations
     if params['wantUART']:
-        file.write('pico_enable_stdio_uart(' + projectName + ' 1)\n')
+        file.write(f'pico_enable_stdio_uart({projectName} 1)\n')
     else:
-        file.write('pico_enable_stdio_uart(' + projectName + ' 0)\n')
+        file.write(f'pico_enable_stdio_uart({projectName} 0)\n')
 
     if params['wantUSB']:
-        file.write('pico_enable_stdio_usb(' + projectName + ' 1)\n\n')
+        file.write(f'pico_enable_stdio_usb({projectName} 1)\n\n')
     else:
-        file.write('pico_enable_stdio_usb(' + projectName + ' 0)\n\n')
+        file.write(f'pico_enable_stdio_usb({projectName} 0)\n\n')
 
     # If we need wireless, check for SSID and password
     # removed for the moment as these settings are currently only needed for the pico-examples
-    # but may be requried in here at a later date.
+    # but may be required in here at a later date.
     if False:
         if 'ssid' in params or 'password' in params:
             file.write('# Add any wireless access point information\n')
-            file.write('target_compile_definitions(' + projectName + ' PRIVATE\n')
+            file.write(f'target_compile_definitions({projectName} PRIVATE\n')
             if 'ssid' in params:
-                file.write('WIFI_SSID=\"' + params['ssid'] + '\"\n')
+                file.write(f'WIFI_SSID=\" {params["ssid"]} \"\n')
             else:
-                file.write('WIFI_SSID=\"${WIFI_SSID}\"')
+                file.write(f'WIFI_SSID=\"${WIFI_SSID}\"')
 
             if 'password' in params:
-                file.write('WIFI_PASSWORD=\"' + params['password'] + '\"\n')
+                file.write(f'WIFI_PASSWORD=\"{params["password"]}\"\n')
             else:
-                file.write('WIFI_PASSWORD=\"${WIFI_PASSWORD}\"')
+                file.write(f'WIFI_PASSWORD=\"${WIFI_PASSWORD}\"')
             file.write(')\n\n')
 
     # Standard libraries
     file.write('# Add the standard library to the build\n')
-    file.write('target_link_libraries(' + projectName + '\n')
+    file.write(f'target_link_libraries({projectName}\n')
     file.write("        " + STANDARD_LIBRARIES)
     file.write(')\n\n')
 
     # Standard include directories
     file.write('# Add the standard include files to the build\n')
-    file.write('target_include_directories(' + projectName + ' PRIVATE\n')
+    file.write(f'target_include_directories({projectName} PRIVATE\n')
     file.write("  ${CMAKE_CURRENT_LIST_DIR}\n")
     file.write("  ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required\n")
     file.write(')\n\n')
@@ -1103,7 +1099,7 @@ def GenerateCMake(folder, params):
     # Selected libraries/features
     if (params['features']):
         file.write('# Add any user requested libraries\n')
-        file.write('target_link_libraries(' + projectName + '\n')
+        file.write(f'target_link_libraries({projectName} \n')
         for feat in params['features']:
             if (feat in features_list):
                 file.write("        " + features_list[feat][LIB_NAME] + '\n')
@@ -1111,7 +1107,7 @@ def GenerateCMake(folder, params):
                 file.write("        " + picow_options_list[feat][LIB_NAME] + '\n')
         file.write('        )\n\n')
 
-    file.write('pico_add_extra_outputs(' + projectName + ')\n\n')
+    file.write(f'pico_add_extra_outputs({projectName})\n\n')
 
     file.close()
 
@@ -1143,7 +1139,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '      "gdbPath": "gdb-multiarch",\n'
                   '      "device": "RP2040",\n'
                   '      "configFiles": [\n' + \
-                  '        "interface/' + deb + '",\n' + \
+                  f'        "interface/{deb}",\n' + \
                   '        "target/rp2040.cfg"\n' + \
                   '        ],\n' +  \
                   '      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",\n'
@@ -1181,7 +1177,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                    '  "cmake.statusbar.advanced": {\n'
                    '    "debug" : {\n'
                    '      "visibility": "hidden"\n'
-                   '              },'
+                   '              },\n'
                    '    "launch" : {\n'
                    '      "visibility": "hidden"\n'
                    '               },\n'
@@ -1390,7 +1386,7 @@ c = CheckPrerequisites()
 ## TODO Do both warnings in the same error message so user does have to keep coming back to find still more to do
 
 if c == None:
-    m = 'Unable to find the `' + COMPILER_NAME + '` compiler\n'
+    m = f'Unable to find the `{COMPILER_NAME}` compiler\n'
     m +='You will need to install an appropriate compiler to build a Raspberry Pi Pico project\n'
     m += 'See the Raspberry Pi Pico documentation for how to do this on your particular platform\n'
 
