@@ -57,7 +57,7 @@ features_list = {
     'pio' :             ("PIO interface",   "pio.c",            "hardware/pio.h",       "hardware_pio"),
     'interp' :          ("HW interpolation", "interp.c",        "hardware/interp.h",    "hardware_interp"),
     'timer' :           ("HW timer",        "timer.c",          "hardware/timer.h",     "hardware_timer"),
-    'watch' :           ("HW watchdog",     "watch.c",          "hardware/watchdog.h",  "hardware_watchdog"),
+    'watchdog' :        ("HW watchdog",     "watch.c",          "hardware/watchdog.h",  "hardware_watchdog"),
     'clocks' :          ("HW clocks",       "clocks.c",         "hardware/clocks.h",    "hardware_clocks"),
 }
 
@@ -75,8 +75,8 @@ stdlib_examples_list = {
     'div' :     ("Low level HW Divider",    "divider.c",        "hardware/divider.h",   "hardware_divider")
 }
 
-debugger_list = ["SWD", "PicoProbe"]
-debugger_config_list = ["raspberrypi-swd.cfg", "picoprobe.cfg"]
+debugger_list = ["DebugProbe (CMSIS-DAP)", "SWD (Pi host)"]
+debugger_config_list = ["cmsis-dap.cfg", "raspberrypi-swd.cfg"]
 
 DEFINES = 0
 INITIALISERS = 1
@@ -237,19 +237,20 @@ def RunGUI(sdkpath, args):
     style = ttk.Style(root)
     style.theme_use('default')
 
-    ttk.Style().configure("TButton", padding=6, relief="groove", border=2, foreground=GetButtonTextColour(), background=GetButtonBackground())
-    ttk.Style().configure("TLabel", foreground=GetTextColour(), background=GetBackground() )
-    ttk.Style().configure("TCheckbutton", foreground=GetTextColour(), background=GetBackground())
-    ttk.Style().configure("TRadiobutton", foreground=GetTextColour(), background=GetBackground() )
-    ttk.Style().configure("TLabelframe", foreground=GetTextColour(), background=GetBackground() )
-    ttk.Style().configure("TLabelframe.Label", foreground=GetTextColour(), background=GetBackground() )
-    ttk.Style().configure("TCombobox", foreground=GetTextColour(), background=GetBackground() )
-    ttk.Style().configure("TListbox", foreground=GetTextColour(), background=GetBackground() )
+    style.configure("TButton", padding=6, relief="groove", border=2, foreground=GetButtonTextColour(), background=GetButtonBackground())
+    style.configure("TLabel", foreground=GetTextColour(), background=GetBackground() )
+    style.configure("TCheckbutton", foreground=GetTextColour(), background=GetBackground())
+    style.configure("TRadiobutton", foreground=GetTextColour(), background=GetBackground() )
+    style.configure("TLabelframe", foreground=GetTextColour(), background=GetBackground() )
+    style.configure("TLabelframe.Label", foreground=GetTextColour(), background=GetBackground() )
+    style.configure("TCombobox", foreground=GetTextColour(), background=GetBackground() )
+    style.configure("TListbox", foreground=GetTextColour(), background=GetBackground() )
 
-    ttk.Style().map("TCheckbutton", background = [('disabled', GetBackground())])
-    ttk.Style().map("TRadiobutton", background = [('disabled', GetBackground())])
-    ttk.Style().map("TButton", background = [('disabled', GetBackground())])
-    ttk.Style().map("TLabel", background = [('background', GetBackground())])
+    style.map("TCheckbutton", background = [('disabled', GetBackground())])
+    style.map("TRadiobutton", background = [('disabled', GetBackground())])
+    style.map("TButton", background = [('disabled', GetBackground())])
+    style.map("TLabel", background = [('background', GetBackground())])
+    style.map("TComboBox", background = [('readonly', GetBackground())])
 
     app = ProjectWindow(root, sdkpath, args)
 
@@ -761,6 +762,7 @@ class ProjectWindow(tk.Frame):
         # IDE Options section
 
         vscodeoptionsSubframe = ttk.LabelFrame(mainFrame, relief=tk.RIDGE, borderwidth=2, text="IDE Options")
+        vscodeoptionsSubframe.grid_columnconfigure(2, weight=1)
         vscodeoptionsSubframe.grid(row=optionsRow, column=0, columnspan=5, rowspan=2, padx=5, pady=5, ipadx=5, ipady=3, sticky=tk.E+tk.W)
 
         self.wantVSCode = tk.IntVar()
@@ -773,7 +775,7 @@ class ProjectWindow(tk.Frame):
         ttk.Label(vscodeoptionsSubframe, text = "     Debugger:").grid(row=0, column=1, padx=4, sticky=tk.W)
 
         self.debugger = ttk.Combobox(vscodeoptionsSubframe, values=debugger_list, state="readonly")
-        self.debugger.grid(row=0, column=2, padx=4, sticky=tk.W)
+        self.debugger.grid(row=0, column=2, padx=4, sticky=tk.EW)
         self.debugger.current(args.debugger)
 
         optionsRow += 2
@@ -1119,29 +1121,50 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
 
     os.chdir(projectPath)
 
-    deb = debugger_config_list[debugger]
+    debugger = debugger_config_list[debugger]
+    gdbPath =  "arm-none-eabi-gdb" if isWindows else "gdb-multiarch"
+    # Need to escape windows files paths backslashes
+    cPath = str(compilerPath).replace('\\', '\\\\' )
 
     for p in projects :
         if p == 'vscode':
-            v1 = ('{\n'
-                  '  // Use IntelliSense to learn about possible attributes.\n'
-                  '  // Hover to view descriptions of existing attributes.\n'
-                  '  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387\n'
+            launch = ('{\n'
                   '  "version": "0.2.0",\n'
                   '  "configurations": [\n'
                   '    {\n'
-                  '      "name": "Cortex Debug",\n'
+                  '      "name": "Pico Debug (Cortex-Debug)",\n'
                   '      "cwd": "${workspaceRoot}",\n'
                   '      "executable": "${command:cmake.launchTargetPath}",\n'
                   '      "request": "launch",\n'
                   '      "type": "cortex-debug",\n'
                   '      "servertype": "openocd",\n'
-                  '      "gdbPath": "gdb-multiarch",\n'
+                  f'      "gdbPath": "{gdbPath}",\n'
                   '      "device": "RP2040",\n'
-                  '      "configFiles": [\n' + \
-                  f'        "interface/{deb}",\n' + \
-                  '        "target/rp2040.cfg"\n' + \
-                  '        ],\n' +  \
+                  '      "configFiles": [\n'
+                  f'        "interface/{debugger}",\n'
+                  '        "target/rp2040.cfg"\n'
+                  '        ],\n'
+                  '      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",\n'
+                  '      "runToEntryPoint": "main",\n'
+                  '      // Give restart the same functionality as runToEntryPoint - main\n'
+                  '      "postRestartCommands": [\n'
+                  '          "break main",\n'
+                  '          "continue"\n'
+                  '      ],\n'
+                  '      "openOCDLaunchCommands": [\n'
+                  '          "adapter speed 1000"\n'
+                  '      ]\n'
+                  '    },\n'
+                  '    {\n'
+                  '      "name": "Pico Debug (Cortex-Debug with external OpenOCD)",\n'
+                  '      "cwd": "${workspaceRoot}",\n'
+                  '      "executable": "${command:cmake.launchTargetPath}",\n'
+                  '      "request": "launch",\n'
+                  '      "type": "cortex-debug",\n'
+                  '      "servertype": "external",\n'
+                  '      "gdbTarget": "localhost:3333",\n'
+                  f'      "gdbPath": "{gdbPath}",\n'
+                  '      "device": "RP2040",\n'
                   '      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",\n'
                   '      "runToEntryPoint": "main",\n'
                   '      // Give restart the same functionality as runToEntryPoint - main\n'
@@ -1149,22 +1172,43 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '          "break main",\n'
                   '          "continue"\n'
                   '      ]\n'
-                  '    }\n'
+                  '    },\n'
+                  '    {\n'
+                  '      "name": "Pico Debug (C++ Debugger)",\n'
+                  '      "type": "cppdbg",\n'
+                  '      "request": "launch",\n'
+                  '      "cwd": "${workspaceRoot}",\n'
+                  '      "program": "${command:cmake.launchTargetPath}",\n'
+                  '      "MIMode": "gdb",\n'
+                  '      "miDebuggerPath": "{gdbPath}",\n'
+                  '      "miDebuggerServerAddress": "localhost:3333",\n'
+                  '      "debugServerPath": "openocd",\n'
+                  '      "debugServerArgs": "-f interface/cmsis-dap.cfg -f target/rp2040.cfg -c \\"adapter speed 1000\\"",\n'
+                  '      "serverStarted": "Listening on port .* for gdb connections",\n'
+                  '      "filterStderr": true,\n'
+                  '      "stopAtEntry": true,\n'
+                  '      "hardwareBreakpoints": {\n'
+                  '        "require": true,\n'
+                  '        "limit": 4\n'
+                  '      },\n'
+                  '      "preLaunchTask": "Flash",\n'
+                  '      "svdPath": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd"\n'
+                  '    },\n'
                   '  ]\n'
                   '}\n')
 
-            c1 = ('{\n'
+            properties = ('{\n'
                   '  "configurations": [\n'
                   '    {\n'
-                  '      "name": "Linux",\n'
+                  '      "name": "Pico",\n'
                   '      "includePath": [\n'
                   '        "${workspaceFolder}/**",\n'
                   '        "${env:PICO_SDK_PATH}/**"\n'
                   '      ],\n'
                   '      "defines": [],\n'
-                  f'      "compilerPath": "{compilerPath}",\n'
-                  '      "cStandard": "gnu17",\n'
-                  '      "cppStandard": "gnu++14",\n'
+                  f'      "compilerPath": "{cPath}",\n'
+                  '      "cStandard": "c17",\n'
+                  '      "cppStandard": "c++14",\n'
                   '      "intelliSenseMode": "linux-gcc-arm",\n'
                   '      "configurationProvider" : "ms-vscode.cmake-tools"\n'
                   '    }\n'
@@ -1172,8 +1216,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '  "version": 4\n'
                   '}\n')
 
-            s1 = ( '{\n'
-                   '  "cmake.configureOnOpen": false,\n'
+            settings = ( '{\n'
                    '  "cmake.statusbar.advanced": {\n'
                    '    "debug" : {\n'
                    '      "visibility": "hidden"\n'
@@ -1188,13 +1231,22 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                    '      "visibility": "hidden"\n'
                    '               },\n'
                    '     },\n'
+                   '     "cmake.buildBeforeRun": true,\n'
+                   '     "cmake.configureOnOpen": true,\n'
+                   '     "cmake.configureSettings": {\n'
+                   '        "CMAKE_MODULE_PATH": "${env:PICO_INSTALL_PATH}/pico-sdk-tools"\n'
+                   '      },\n'
+                   '     "cmake.generator": "Ninja",\n'
+                   '     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools")\n'
                    '}\n')
 
-            e1 = ( '{\n'
+            extensions = ( '{\n'
                    '  "recommendations": [\n'
                    '    "marus25.cortex-debug",\n'
                    '    "ms-vscode.cmake-tools",\n'
                    '    "ms-vscode.cpptools"\n'
+                   '    "ms-vscode.cpptools-extension-pack",\n'
+                   '    "ms-vscode.vscode-serial-monitor"\n'
                    '  ]\n'
                    '}\n')
 
@@ -1206,19 +1258,19 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
 
             filename = VSCODE_LAUNCH_FILENAME
             file = open(filename, 'w')
-            file.write(v1)
+            file.write(launch)
             file.close()
 
             file = open(VSCODE_C_PROPERTIES_FILENAME, 'w')
-            file.write(c1)
+            file.write(properties)
             file.close()
 
             file = open(VSCODE_SETTINGS_FILENAME, 'w')
-            file.write(s1)
+            file.write(settings)
             file.close()
 
             file = open(VSCODE_EXTENSIONS_FILENAME, 'w')
-            file.write(e1)
+            file.write(extensions)
             file.close()
 
         else :
@@ -1340,14 +1392,22 @@ def DoEverything(parent, params):
             # Assume MinGW environment
             cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" ..'
             makeCmd = 'mingw32-make '
-
+        elif shutil.which("ninja"):
+            # When installing SDK version 1.5.0 on windows with installer pico-setup-windows-x64-standalone.exe, ninja is used 
+            cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja ..'
+            makeCmd = 'ninja '        
         else:
             # Everything else assume nmake
             cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" ..'
             makeCmd = 'nmake '
     else:
-        cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug ..'
-        makeCmd = 'make -j' + str(cpus)
+        # Ninja now works OK under Linux, so if installed use it by default. It's faster.
+        if shutil.which("ninja"):
+            cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja ..'
+            makeCmd = 'ninja '
+        else:
+            cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug ..'
+            makeCmd = 'make -j' + str(cpus)
 
     if params['wantGUI']:
         RunCommandInWindow(parent, cmakeCmd)
