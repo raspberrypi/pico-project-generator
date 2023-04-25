@@ -6,6 +6,18 @@ The tool will generate all required CMake files, program files and VSCode IDE fi
 
 It will also add example code for any features and optionally for some standard library functions.
 
+### Notes for installation on Windows
+
+If you are using the Windows installer, the version of Python that is part of that package does not include TKInter
+support which is needed by this generator. You will need a standard install of Python as follows:
+
+1. Install the SDK with the Raspberry Pi Pico SDK installer.
+1. Install the full version of Python from https://www.python.org/downloads/windows/.
+1. Open a Pico - Developer Command Prompt window.
+1. cd to the location where you have downloaded/cloned the pico-project-generator.
+1. Launch using `py.exe` instead of `python.exe`. e.g. py pico_project.py --gui, this will use the latest
+installed version (the full version) instead of the embedded distribution included with the SDK.
+
 ## Command line
 
 Running `./pico_project.py --help` will give a list of the available command line parameters
@@ -58,11 +70,11 @@ be added to the project using the `--feature` options, this can be used multiple
 
 ## GUI version
 
-The GUI version of the tool, run by adding `--gui` to the command line, uses `tkinter` to provide a platform agnostic script that will run on Linux, Mac and Windows. All the options from the command line tool are also supported in the GUI. It may be necessary to install the `python3-tk` package for GUI support on Ubuntu/Debian platforms.
+The GUI version of the tool, run by adding `--gui` to the command line, uses `tkinter` to provide a platform-agnostic script that will run on Linux, Mac and Windows. All the options from the command line tool are also supported in the GUI. It may be necessary to install the `python3-tk` package for GUI support on Ubuntu/Debian platforms.
 
 The board type selects the specific board header files to be used. The generator will scan the Pico SDK boards folder for all available boards.
 
-You can add specific features to your project by selecting them from the check boxes on the GUI. This will ensure the build system adds the appropriate code to the build, and also adds simple example code to the project showing how to use the feature. There are a number of options available, which provide the following functionality.
+You can add specific features to your project by selecting them from the checkboxes on the GUI. This will ensure the build system adds the appropriate code to the build and also adds simple example code to the project showing how to use the feature. There are several options available, which provide the following functionality.
 
 Pico Wireless Options | Description
 ----------------------|-----------
