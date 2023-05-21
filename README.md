@@ -8,15 +8,15 @@ It will also add example code for any features and optionally for some standard 
 
 ### Notes for installation on Windows
 
-If you are using the Windows installer, the version of Python that is part of that package does not include TKInter
+If you are using the [Windows installer](https://www.raspberrypi.com/news/raspberry-pi-pico-windows-installer/), the version of Python that is part of that package does not include TKInter
 support which is needed by this generator. You will need a standard install of Python as follows:
 
-1. Install the SDK with the Raspberry Pi Pico SDK installer.
+1. Install the SDK with the Raspberry Pi "Pico setup for Windows" installer from https://github.com/raspberrypi/pico-setup-windows/.
 1. Install the full version of Python from https://www.python.org/downloads/windows/.
 1. Open a Pico - Developer Command Prompt window.
-1. cd to the location where you have downloaded/cloned the pico-project-generator.
-1. Launch using `py.exe` instead of `python.exe`. e.g. py pico_project.py --gui, this will use the latest
-installed version (the full version) instead of the embedded distribution included with the SDK.
+1. `cd` to the location where you have downloaded/cloned the pico-project-generator.
+1. Launch using `py.exe` instead of `python.exe`. e.g. `py pico_project.py --gui`, this will use the latest
+installed version (the full version) of Python, instead of the embedded distribution included with the SDK.
 
 ## Command line
 
