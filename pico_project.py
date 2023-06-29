@@ -75,8 +75,9 @@ stdlib_examples_list = {
     'div' :     ("Low level HW Divider",    "divider.c",        "hardware/divider.h",   "hardware_divider")
 }
 
-debugger_list = ["SWD", "PicoProbe"]
-debugger_config_list = ["raspberrypi-swd.cfg", "picoprobe.cfg"]
+debugger_list = ["SWD", "PicoProbe", "CMSIS-DAP Debug Probe"]
+debugger_config_list = ["raspberrypi-swd.cfg", "picoprobe.cfg", "cmsis-dap.cfg"]
+debug_server_args_list = ["", "", "\"-c\", \"adapter speed 5000\" "]
 
 DEFINES = 0
 INITIALISERS = 1
@@ -1120,6 +1121,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
     os.chdir(projectPath)
 
     deb = debugger_config_list[debugger]
+    server_args = debug_server_args_list[debugger]
 
     for p in projects :
         if p == 'vscode':
@@ -1137,6 +1139,9 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                   '      "type": "cortex-debug",\n'
                   '      "servertype": "openocd",\n'
                   '      "gdbPath": "gdb-multiarch",\n'
+                  '      "serverArgs": [\n'
+                  f'        {server_args}\n'
+                  '      ],\n'
                   '      "device": "RP2040",\n'
                   '      "configFiles": [\n' + \
                   f'        "interface/{deb}",\n' + \
