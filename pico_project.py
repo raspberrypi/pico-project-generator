@@ -913,6 +913,7 @@ def ParseCommandLine():
     parser.add_argument("-board", "--boardtype", action="store", default='pico', help="Select board type (see --boardlist for available boards)")
     parser.add_argument("-bl", "--boardlist", action="store_true", help="List available board types")
     parser.add_argument("-cp", "--cpath", help="Override default VSCode compiler path")
+    parser.add_argument("-root", "--projectRoot", help="Override default project root where the new project will be created")
 
     return parser.parse_args()
 
@@ -1422,7 +1423,7 @@ boardtype_list.sort()
 if args.gui:
     RunGUI(sdkPath, args) # does not return, only exits
 
-projectRoot = Path(os.getcwd())
+projectRoot = Path(os.getcwd()) if not args.projectRoot else Path(args.projectRoot)
 
 if args.list or args.configs or args.boardlist:
     if args.list:
