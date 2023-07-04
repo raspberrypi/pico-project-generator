@@ -1244,7 +1244,7 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
                    '  "recommendations": [\n'
                    '    "marus25.cortex-debug",\n'
                    '    "ms-vscode.cmake-tools",\n'
-                   '    "ms-vscode.cpptools"\n'
+                   '    "ms-vscode.cpptools",\n'
                    '    "ms-vscode.cpptools-extension-pack",\n'
                    '    "ms-vscode.vscode-serial-monitor"\n'
                    '  ]\n'
