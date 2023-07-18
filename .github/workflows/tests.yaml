@@ -1,0 +1,33 @@
+name: Run tests
+on: [push, pull_request]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout pico-sdk/develop
+      uses: actions/checkout@v2
+      with:
+        repository: raspberrypi/pico-sdk
+        ref: develop
+        path: pico-sdk
+
+    - name: Checkout pico-sdk submodules
+      run: cd pico-sdk && git submodule update --init
+
+    - name: Install toolchain dependencies
+      run:  sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib
+
+    - name: Checkout pico-project-generator
+      uses: actions/checkout@v2
+      with:
+        path: pico-project-generator
+
+    - name: Install project generator dependencies
+      run: cd pico-project-generator && python3 -m pip install -r requirements.txt
+
+    - name: Install project generator test dependencies
+      run: python3 -m pip install pytest
+
+    - name: Run pytest
+      run: cd pico-project-generator && pytest
