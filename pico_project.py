@@ -7,12 +7,9 @@
 #
 
 import argparse
-from copy import copy
 import os
-from pyexpat import features
 import shutil
 from pathlib import Path
-import string
 import sys
 import subprocess
 import platform
