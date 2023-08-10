@@ -30,6 +30,15 @@ except ImportError:
     sys.exit(1)
 
 
+class ExitCodes:
+    """Exit codes per reason; range starts at 0xA00 to avoid clashing with OS reserved exit codes"""
+    SUCCESS = 0
+    INVALID_PROJECT_PATH = -0xA01
+    EXISTING_PROJECT_NO_OVERWRITE = -0xA02
+    NO_COMPILER_FOUND = -0xA03
+    NO_PROJECT_NAME = -0xA04
+    PICO_SDK_NOT_FOUND = -0xA05
+
 CMAKELIST_FILENAME = 'CMakeLists.txt'
 CMAKECACHE_FILENAME = 'CMakeCache.txt'
 
@@ -261,11 +270,11 @@ def RunGUI(sdkpath, args):
     app.configure(background=GetBackground())
 
     root.mainloop()
-    sys.exit(0)
+    sys.exit(ExitCodes.SUCCESS)
 
 def RunWarning(message):
     mb.showwarning('Raspberry Pi Pico Project Generator', message)
-    sys.exit(0)
+    sys.exit(ExitCodes.SUCCESS)
 
 import threading
 
@@ -812,7 +821,7 @@ class ProjectWindow(tk.Frame):
 
     def quit(self):
         # TODO Check if we want to exit here
-        sys.exit(0)
+        sys.exit(ExitCodes.SUCCESS)
 
     def OK(self):
         # OK, grab all the settings from the page, then call the generators
@@ -1270,7 +1279,7 @@ def DoEverything(parent, params):
             return
         else:
             print('Invalid project path')
-            sys.exit(-1)
+            sys.exit(ExitCodes.INVALID_PROJECT_PATH)
 
     oldCWD = os.getcwd()
     os.chdir(params['projectRoot'])
@@ -1293,13 +1302,13 @@ def DoEverything(parent, params):
                     return
             else:
                 print('There already appears to be a project in this folder. Use the --overwrite option to overwrite the existing project')
-                sys.exit(-1)
+                sys.exit(ExitCodes.EXISTING_PROJECT_NO_OVERWRITE)
 
         # We should really confirm the user wants to overwrite
         #print('Are you sure you want to overwrite the existing project files? (y/N)')
         #c = input().split(" ")[0]
         #if c != 'y' and c != 'Y' :
-        #    sys.exit(0)
+        #    sys.exit(ExitCodes.SUCCESS)
 
     # Copy the SDK finder cmake file to our project folder
     # Can be found here <PICO_SDK_PATH>/external/pico_sdk_import.cmake
@@ -1400,11 +1409,11 @@ if c == None:
         RunWarning(m)
     else:
         print(m)
-    sys.exit(-1)
+    sys.exit(ExitCodes.NO_COMPILER_FOUND)
 
 if args.name == None and not args.gui and not args.list and not args.configs and not args.boardlist:
     print("No project name specfied\n")
-    sys.exit(-1)
+    sys.exit(ExitCodes.NO_PROJECT_NAME)
 
 # Check if we were provided a compiler path, and override the default if so
 if args.cpath:
@@ -1418,7 +1427,7 @@ LoadConfigurations()
 p = CheckSDKPath(args.gui)
 
 if p == None:
-    sys.exit(-1)
+    sys.exit(ExitCodes.PICO_SDK_NOT_FOUND)
 
 sdkPath = Path(p)
 
@@ -1449,7 +1458,7 @@ if args.list or args.configs or args.boardlist:
             print(board)
         print('\n')
 
-    sys.exit(0)
+    sys.exit(ExitCodes.SUCCESS)
 else :
     params={
         'sdkPath'       : sdkPath,
