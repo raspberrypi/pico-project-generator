@@ -16,11 +16,19 @@ import platform
 import shlex
 import csv
 
-import tkinter as tk
-from tkinter import messagebox as mb
-from tkinter import filedialog as fd
-from tkinter import simpledialog as sd
-from tkinter import ttk
+# TODO: conditional import of tkinter if --gui option is used
+try:
+    import tkinter as tk
+    from tkinter import \
+        messagebox as mb, \
+        filedialog as fd, \
+        simpledialog as sd, \
+        ttk
+
+except ImportError:
+    print("[\033[91mERROR\033[0m] tkinter module not found")
+    sys.exit(1)
+
 
 CMAKELIST_FILENAME = 'CMakeLists.txt'
 CMAKECACHE_FILENAME = 'CMakeCache.txt'
