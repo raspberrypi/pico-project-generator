@@ -1140,83 +1140,87 @@ def generateProjectFiles(projectPath, projectName, sdkPath, projects, debugger):
 
     for p in projects :
         if p == 'vscode':
-            v1 = ('{\n'
-                  '  // Use IntelliSense to learn about possible attributes.\n'
-                  '  // Hover to view descriptions of existing attributes.\n'
-                  '  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387\n'
-                  '  "version": "0.2.0",\n'
-                  '  "configurations": [\n'
-                  '    {\n'
-                  '      "name": "Cortex Debug",\n'
-                  '      "cwd": "${workspaceRoot}",\n'
-                  '      "executable": "${command:cmake.launchTargetPath}",\n'
-                  '      "request": "launch",\n'
-                  '      "type": "cortex-debug",\n'
-                  '      "servertype": "openocd",\n'
-                  '      "gdbPath": "gdb-multiarch",\n'
-                  '      "serverArgs": [\n'
-                  f'        {server_args}\n'
-                  '      ],\n'
-                  '      "device": "RP2040",\n'
-                  '      "configFiles": [\n' + \
-                  f'        "interface/{deb}",\n' + \
-                  '        "target/rp2040.cfg"\n' + \
-                  '        ],\n' +  \
-                  '      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",\n'
-                  '      "runToEntryPoint": "main",\n'
-                  '      // Give restart the same functionality as runToEntryPoint - main\n'
-                  '      "postRestartCommands": [\n'
-                  '          "break main",\n'
-                  '          "continue"\n'
-                  '      ]\n'
-                  '    }\n'
-                  '  ]\n'
-                  '}\n')
+            v1 = f'''{{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {{
+            "name": "Cortex Debug",
+            "cwd": "${{workspaceRoot}}",
+            "executable": "${{command:cmake.launchTargetPath}}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "gdbPath": "gdb-multiarch",
+            "serverArgs": [
+                {server_args}
+            ],
+            "device": "RP2040",
+            "configFiles": [
+                "interface/{deb}",
+                "target/rp2040.cfg"
+            ],
+            "svdFile": "${{env:PICO_SDK_PATH}}/src/rp2040/hardware_regs/rp2040.svd",
+            "runToEntryPoint": "main",
+            // Give restart the same functionality as runToEntryPoint - main
+            "postRestartCommands": [
+                "break main",
+                "continue"
+            ]
+        }}
+    ]
+}}
+'''
 
-            c1 = ('{\n'
-                  '  "configurations": [\n'
-                  '    {\n'
-                  '      "name": "Linux",\n'
-                  '      "includePath": [\n'
-                  '        "${workspaceFolder}/**",\n'
-                  '        "${env:PICO_SDK_PATH}/**"\n'
-                  '      ],\n'
-                  '      "defines": [],\n'
-                  f'      "compilerPath": "{compilerPath}",\n'
-                  '      "cStandard": "gnu17",\n'
-                  '      "cppStandard": "gnu++14",\n'
-                  '      "intelliSenseMode": "linux-gcc-arm",\n'
-                  '      "configurationProvider" : "ms-vscode.cmake-tools"\n'
-                  '    }\n'
-                  '  ],\n'
-                  '  "version": 4\n'
-                  '}\n')
+            c1 = f'''{{
+    "configurations": [
+        {{
+            "name": "Linux",
+            "includePath": [
+                "${{workspaceFolder}}/**",
+                "${{env:PICO_SDK_PATH}}/**"
+            ],
+            "defines": [],
+            "compilerPath": "{compilerPath}",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "linux-gcc-arm",
+            "configurationProvider" : "ms-vscode.cmake-tools"
+        }}
+    ]
+    "version": 4
+}}
+'''
 
-            s1 = ( '{\n'
-                   '  "cmake.configureOnOpen": false,\n'
-                   '  "cmake.statusbar.advanced": {\n'
-                   '    "debug" : {\n'
-                   '      "visibility": "hidden"\n'
-                   '              },\n'
-                   '    "launch" : {\n'
-                   '      "visibility": "hidden"\n'
-                   '               },\n'
-                   '    "build" : {\n'
-                   '      "visibility": "hidden"\n'
-                   '               },\n'
-                   '    "buildTarget" : {\n'
-                   '      "visibility": "hidden"\n'
-                   '               },\n'
-                   '     },\n'
-                   '}\n')
+            s1 = f'''{{
+    "cmake.configureOnOpen": false,
+    "cmake.statusbar.advanced": {{
+        "debug" : {{
+            "visibility": "hidden"
+        }},
+        "launch" : {{
+            "visibility": "hidden"
+        }},
+        "build" : {{
+            "visibility": "hidden"
+        }},
+        "buildTarget" : {{
+            "visibility": "hidden"
+        }}
+    }}
+}}
+'''
 
-            e1 = ( '{\n'
-                   '  "recommendations": [\n'
-                   '    "marus25.cortex-debug",\n'
-                   '    "ms-vscode.cmake-tools",\n'
-                   '    "ms-vscode.cpptools"\n'
-                   '  ]\n'
-                   '}\n')
+            e1 = f'''{{
+    "recommendations": [
+        "marus25.cortex-debug",
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools"
+    ]
+}}
+'''
 
             # Create a build folder, and run our cmake project build from it
             if not os.path.exists(VSCODE_FOLDER):
