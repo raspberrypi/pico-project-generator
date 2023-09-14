@@ -108,6 +108,7 @@ IDE Options | Description
 ------------| -----------
 Create VSCode Project | As well as the CMake files, also create the appropriate Visual Studio Code project files.
 Debugger | Use the specified debugger in the IDE
+Git | Generate initial README and LICENSE, init the directory and do an initial commit
 
 
 
