@@ -1,5 +1,7 @@
 # pico-project-generator
 
+## This project is now deprecated. Please use the Visual Studio Code plugin for RP-series microcontrollers which provides this functionality plus much more. 
+
 This is a command line or GUI tool, written in Python, to automatically generate a Pico C SDK Project.
 
 The tool will generate all required CMake files, program files and VSCode IDE files for the set of features requested.
