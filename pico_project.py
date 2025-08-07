@@ -1362,9 +1362,15 @@ def DoEverything(parent, params):
             makeCmd = 'mingw32-make '
 
         else:
-            # Everything else assume nmake
-            cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" ..'
-            makeCmd = 'nmake '
+		    # Check if the environment variable CMAKE_GENERATOR specifies Ninja; If yes: Don´t specifiy special case to CMake
+            if os.environ.get('CMAKE_GENERATOR', 'not_found') == 'Ninja':
+                cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug ..'
+                makeCmd = 'ninja '
+
+            else:
+                # Everything else assume nmake
+                cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" ..'
+                makeCmd = 'nmake '
     else:
         cmakeCmd = 'cmake -DCMAKE_BUILD_TYPE=Debug ..'
         makeCmd = 'make -j' + str(cpus)
